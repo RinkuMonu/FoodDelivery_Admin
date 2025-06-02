@@ -21,6 +21,7 @@ import FoodItem from "./pages/FoodItem";
 import Menu from "./pages/Menu";
 import DeliveryStaff from "./pages/DeliveryStaff";
 import ProfilePage from "./pages/Profile";
+import Reports from "./pages/Reports";
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
           <Route path="delivery" element={<DeliveryStaff />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="menu" element={<Menu />} />
+          <Route path="reports" element={<Reports />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

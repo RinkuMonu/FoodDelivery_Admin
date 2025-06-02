@@ -185,17 +185,30 @@ const Dashboard = () => {
   } else {
     greeting = "Good evening";
   }
-  useEffect(() => {
-    const fetchOrder = () => {
-      try {
-        const response = axiosInstance.get("/api/orders");
-        setOrders(response?.data?.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchOrder();
-  }, []);
+
+   const fetchOrder = async () => {
+    try {
+      const response = await axiosInstance.get("/api/orders"); // ✅ Await added
+      setOrders(response?.data?.data || []); // ✅ Safe fallback
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+      setOrders([]); // ✅ Fallback to empty array
+    }
+  };
+
+  const ferchDashboadData = async()=>{
+    try{
+      const response = await axiosInstance.get("/api/dashboard/summary")
+      console.log("dashboard data", response)
+    }
+    catch(err){
+       console.error("Failed to fetch orders:", err);
+    }
+  }
+ useEffect(() => {
+ ferchDashboadData()
+  fetchOrder();
+}, []);
   return (
     <div className="space-y-6">
       <div className="border-b border-gray-200 pb-5">
@@ -342,16 +355,16 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {recentOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="font-medium">{order.id}</td>
-                      <td>{order.customer}</td>
-                      <td>{order.date}</td>
-                      <td>${order.total.toFixed(2)}</td>
+                  {orders?.map((order) => (
+                    <tr key={order?.orderNumber} className="hover:bg-gray-50">
+                      <td className="font-medium">{order?.orderNumber}</td>
+                      <td>{order?.user?.email}</td>
+                      <td>{new Date(order?.createdAt).toLocaleString()}</td>
+                      <td>${order?.finalAmount?.toFixed(2)}</td>
                       <td>
                         <span
                           className={`badge ${
-                            order.status === "Delivered"
+                            order?.status === "Delivered"
                               ? "badge-success"
                               : order.status === "Shipped"
                               ? "badge-success"
@@ -360,12 +373,12 @@ const Dashboard = () => {
                               : "badge-error"
                           }`}
                         >
-                          {order.status}
+                          {order?.orderStatus}
                         </span>
                       </td>
                       <td>
                         <Link
-                          to={`/orders/${order.id}`}
+                          to={`/orders/${order?._id}`}
                           className="text-primary-600 hover:text-primary-700"
                         >
                           View
