@@ -74,12 +74,12 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
       icon: <Settings size={20} />,
       roles: ["admin", "restaurant"],
     },
-    {
-      name: "Menu",
-      to: "/menu",
-      icon: <LayoutDashboard size={20} />,
-      roles: ["restaurant"],
-    },
+    // {
+    //   name: "Menu",
+    //   to: "/menu",
+    //   icon: <LayoutDashboard size={20} />,
+    //   roles: ["restaurant"],
+    // },
     {
       name: "Delivery Staff",
       to: "/delivery",
