@@ -251,29 +251,29 @@ const handleDelete = async (
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("rating")}
+                  onClick={() => requestSort("wallet")}
                 >
                   <div className="flex items-center">
-                    Rating
-                    {getSortIcon("rating")}
+                    Wallet Balance
+                    {getSortIcon("wallet")}
                   </div>
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("delivery")}
+                  onClick={() => requestSort("credit")}
                 >
                   <div className="flex items-center">
-                    Average Delivery Time
-                    {getSortIcon("delivery")}
+                    Total Credit
+                    {getSortIcon("credit")}
                   </div>
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("type")}
+                  onClick={() => requestSort("SettleMent")}
                 >
                   <div className="flex items-center">
-                    Type
-                    {getSortIcon("type")}
+                    Total SettleMent
+                    {getSortIcon("SettleMent")}
                   </div>
                 </th>
                 <th

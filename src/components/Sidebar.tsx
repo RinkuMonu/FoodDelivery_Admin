@@ -62,18 +62,18 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
       icon: <Users size={20} />,
       roles: ["admin", "restaurant"],
     },
-    {
-      name: "Inventory",
-      to: "/inventory",
-      icon: <Package size={20} />,
-      roles: ["admin"],
-    },
-    {
-      name: "Settings",
-      to: "/settings",
-      icon: <Settings size={20} />,
-      roles: ["admin", "restaurant"],
-    },
+    // {
+    //   name: "Inventory",
+    //   to: "/inventory",
+    //   icon: <Package size={20} />,
+    //   roles: ["admin"],
+    // },
+    // {
+    //   name: "Settings",
+    //   to: "/settings",
+    //   icon: <Settings size={20} />,
+    //   roles: ["admin", "restaurant"],
+    // },
     {
       name: "Menu",
       to: "/menu",

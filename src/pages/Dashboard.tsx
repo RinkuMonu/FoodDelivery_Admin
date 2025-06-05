@@ -164,6 +164,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [orders, setOrders] = useState([]);
+  const [dashBoardData, setDashBoardData]= useState([])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -200,6 +201,7 @@ const Dashboard = () => {
     try{
       const response = await axiosInstance.get("/api/dashboard/summary")
       console.log("dashboard data", response)
+      setDashBoardData(response?.data)
     }
     catch(err){
        console.error("Failed to fetch orders:", err);
@@ -224,7 +226,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Revenue"
-          value="$124,592.30"
+          value={dashBoardData?.totalRevenue}
           icon={<DollarSign className="h-6 w-6 text-primary-600" />}
           trend="up"
           percentage={12.5}
@@ -232,7 +234,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Total Orders"
-          value="1,429"
+          value={dashBoardData?.totalOrders}
           icon={<ShoppingCart className="h-6 w-6 text-accent-600" />}
           trend="up"
           percentage={8.2}
@@ -240,15 +242,15 @@ const Dashboard = () => {
         />
         <StatCard
           title="Total Customers"
-          value="3,782"
+          value={dashBoardData?.totalCustomers}
           icon={<Users className="h-6 w-6 text-success-600" />}
           trend="up"
           percentage={4.6}
           color="success"
         />
         <StatCard
-          title="Inventory Items"
-          value="289"
+          title="Total Restaurant"
+          value={dashBoardData?.totalRestaurants}
           icon={<Package className="h-6 w-6 text-warning-600" />}
           trend="down"
           percentage={2.3}
@@ -420,7 +422,7 @@ const Dashboard = () => {
       </div>
 
       {/* Top Products */}
-      <div className="card">
+      {/* <div className="card">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-medium">Top Products</h3>
           <Link
@@ -463,7 +465,7 @@ const Dashboard = () => {
             </table>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
