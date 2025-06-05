@@ -236,7 +236,7 @@ const handleDelete = async (
                   onClick={() => requestSort("restaurant")}
                 >
                   <div className="flex items-center">
-                    Restaurant Name
+                    traavvav
                     {getSortIcon("restaurant")}
                   </div>
                 </th>

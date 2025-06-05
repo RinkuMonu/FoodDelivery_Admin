@@ -340,7 +340,7 @@ const handleDelete = async (
                     </Link>
 
                     <Link
-                      to={`/viewreataurant`}
+                      to={`/edit`}
                       className="text-yellow-600 hover:text-yellow-900 inline-flex items-center"
                     >
                       <Pencil className="h-4 w-4 mr-1" />

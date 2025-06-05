@@ -22,6 +22,7 @@ import Menu from "./pages/Menu";
 import DeliveryStaff from "./pages/DeliveryStaff";
 import ProfilePage from "./pages/Profile";
 import Reports from "./pages/Reports";
+import EditRestaurant from "./pages/editRestaurant";
 
 function App() {
   return (
@@ -62,6 +63,8 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="menu" element={<Menu />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="edit" element={<EditRestaurant />} />
+
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
