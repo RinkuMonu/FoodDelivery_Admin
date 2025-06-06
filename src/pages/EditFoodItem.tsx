@@ -1,23 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axiosInstance from "../components/AxiosInstance";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import axiosInstance from '../components/AxiosInstance';
+import { useParams } from 'react-router-dom';
 
-const EditFoodItem = () => {
-  const { _id } = useParams();
-  const navigate = useNavigate();
-  const [menuId, setMenuId] = useState(_id || "");
-  const [imageFile, setImageFile] = useState(null);
+const MenuForm = ({ menuData, onSuccess }) => {
+ const { _id } = useParams();
+
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     price: 0,
     discountedPrice: 0,
-    restaurant: "",
-    category: "",
+    category: '',
     veg: true,
-    spicyLevel: "Medium",
-    ingredients: [""],
-    allergens: [""],
+    spicyLevel: 'Medium',
+    ingredients: [],
+    allergens: [],
     nutritionalInfo: {
       calories: 0,
       protein: 0,
@@ -26,240 +24,281 @@ const EditFoodItem = () => {
       fiber: 0
     },
     preparationTime: 0,
-    serveSize: "",
-    customizations: [
-      {
-        name: "",
-        options: [{ name: "", additionalPrice: 0 }],
-        required: false,
-        multiSelect: false
-      }
-    ],
-    isAvailable: true,
-    image: ""
+    serveSize: '',
+    customizations: [],
+    isAvailable: true
   });
 
+  const [imageFile, setImageFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // For edit mode, populate form when menuData changes
   useEffect(() => {
-    if (_id) {
-      const fetchData = async () => {
-        try {
-          const res = await axiosInstance.get(`/menus/${_id}`);
-          setFormData(res.data);
-        } catch (error) {
-          console.error("Failed to fetch menu data:", error);
-        }
-      };
-      fetchData();
+    if (menuData) {
+      setFormData(menuData);
     }
-  }, [_id]);
+  }, [menuData]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
+    
+    setFormData(prev => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleNestedChange = (parent, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [parent]: {
+        ...prev[parent],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleArrayChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value.split(',').map(item => item.trim())
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = _id ? `/menus/${_id}` : `/menus`;
-    const method = _id ? "put" : "post";
+    setIsLoading(true);
 
     try {
-      const res = await axiosInstance[method](url, formData);
-      const finalMenuId = _id || res.data._id;
-      setMenuId(finalMenuId);
+      let response;
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
 
-      if (imageFile) {
-        await uploadImage(finalMenuId);
+      // Add or Update menu
+      if (menuData?._id) {
+        // Edit existing menu
+        response = await axiosInstance.put(
+          '/api/menus',
+          { ...formData, _id },
+          { headers }
+        );
+      } else {
+        // Add new menu
+        response = await axiosInstance.post(
+          '/api/menus',
+          formData,
+          { headers }
+        );
       }
 
-      alert(_id ? "Menu updated!" : "Menu added!");
-      navigate("/menu-list");
+      // Upload image if selected
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        
+        await axiosInstance.post(
+          `/api/menus/${"6842d19cf66e90cf0ea2e2f3"}/upload-image`,
+          formData,
+       
+        );
+      }
+
+      onSuccess();
     } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Error occurred while saving menu.");
-    }
-  };
-
-  const uploadImage = async (menuId) => {
-    const formDataImg = new FormData();
-    formDataImg.append("ccc", imageFile);
-
-    try {
-      await axiosInstance.post(`/menus/${menuId}/upload-image`, formDataImg, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      console.log("Image uploaded");
-    } catch (err) {
-      console.error("Image upload failed", err);
+      console.error('Error saving menu:', error);
+      alert('Error saving menu. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container mt-4">
-      <h3>{_id ? "Edit Menu" : "Add Menu"}</h3>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label>Food Name</label>
-          <input
-            type="text"
-            className="form-control"
-            name="name"
-            value={formData.name || ""}
-            onChange={handleChange}
-            required
-          />
+    <div className="container mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-4">
+        {menuData ? 'Edit Menu Item' : 'Add New Menu Item'}
+      </h2>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Basic Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block mb-1">Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              rows="2"
+            />
+          </div>
         </div>
 
-        <div className="mb-3">
-          <label>Description</label>
-          <textarea
-            className="form-control"
-            name="description"
-            value={formData.description || ""}
-            onChange={handleChange}
-          ></textarea>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col">
-            <label>Price</label>
+        {/* Pricing */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block mb-1">Price (₹)</label>
             <input
               type="number"
-              className="form-control"
               name="price"
-              value={formData.price || ""}
+              value={formData.price}
               onChange={handleChange}
+              className="w-full p-2 border rounded"
+              min="0"
+              required
             />
           </div>
-          <div className="col">
-            <label>Discounted Price</label>
+          
+          <div>
+            <label className="block mb-1">Discounted Price (₹)</label>
             <input
               type="number"
-              className="form-control"
               name="discountedPrice"
-              value={formData.discountedPrice || ""}
+              value={formData.discountedPrice}
               onChange={handleChange}
+              className="w-full p-2 border rounded"
+              min="0"
+            />
+          </div>
+          
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              name="isAvailable"
+              checked={formData.isAvailable}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            <label>Available</label>
+          </div>
+        </div>
+
+        {/* Category and Type */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block mb-1">Category</label>
+            <input
+              type="text"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              name="veg"
+              checked={formData.veg}
+              onChange={handleChange}
+              className="mr-2"
+            />
+            <label>Vegetarian</label>
+          </div>
+          
+          <div>
+            <label className="block mb-1">Spicy Level</label>
+            <select
+              name="spicyLevel"
+              value={formData.spicyLevel}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+            >
+              <option value="Mild">Mild</option>
+              <option value="Medium">Medium</option>
+              <option value="Hot">Hot</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Ingredients and Allergens */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1">Ingredients (comma separated)</label>
+            <input
+              type="text"
+              value={formData.ingredients.join(', ')}
+              onChange={(e) => handleArrayChange('ingredients', e.target.value)}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+          
+          <div>
+            <label className="block mb-1">Allergens (comma separated)</label>
+            <input
+              type="text"
+              value={formData.allergens.join(', ')}
+              onChange={(e) => handleArrayChange('allergens', e.target.value)}
+              className="w-full p-2 border rounded"
             />
           </div>
         </div>
 
-        <div className="mb-3">
-          <label>Restaurant ID</label>
-          <input
-            type="text"
-            className="form-control"
-            name="restaurant"
-            value={formData.restaurant || ""}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-3">
-          <label>Category ID</label>
-          <input
-            type="text"
-            className="form-control"
-            name="category"
-            value={formData.category || ""}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-3">
-          <label>Spicy Level</label>
-          <select
-            className="form-control"
-            name="spicyLevel"
-            value={formData.spicyLevel || "Medium"}
-            onChange={handleChange}
-          >
-            <option>Low</option>
-            <option>Medium</option>
-            <option>Hot</option>
-          </select>
-        </div>
-
-        <div className="form-check mb-3">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            name="veg"
-            checked={!!formData.veg}
-            onChange={handleChange}
-          />
-          <label className="form-check-label">Veg</label>
-        </div>
-
-        <div className="form-check mb-3">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            name="isAvailable"
-            checked={!!formData.isAvailable}
-            onChange={handleChange}
-          />
-          <label className="form-check-label">Is Available</label>
-        </div>
-
-        <div className="mb-3">
-          <label>Image</label>
-          <input
-            type="file"
-            className="form-control"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files[0])}
-          />
-        </div>
-
-        {formData.image && (
-          <div className="mb-3">
-            <label>Current Image:</label>
+        {/* Nutritional Info */}
+        <div className="border p-4 rounded">
+          <h3 className="font-bold mb-2">Nutritional Information</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>
-              <img
-                src={`http://localhost:4080/${formData.image}`}
-                alt="menu"
-                style={{ width: "120px", borderRadius: "8px", marginTop: "10px" }}
+              <label className="block mb-1">Calories</label>
+              <input
+                type="number"
+                value={formData.nutritionalInfo.calories}
+                onChange={(e) => handleNestedChange('nutritionalInfo', 'calories', e.target.value)}
+                className="w-full p-2 border rounded"
+                min="0"
               />
             </div>
-          </div>
-        )}
-
-        <div className="mb-3">
-          <label>Nutritional Info</label>
-          <div className="row">
-            {Object.keys(formData.nutritionalInfo).map((key) => (
-              <div className="col" key={key}>
-                <input
-                  type="number"
-                  className="form-control mb-2"
-                  placeholder={key}
-                  value={formData.nutritionalInfo[key] || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      nutritionalInfo: {
-                        ...prev.nutritionalInfo,
-                        [key]: e.target.value
-                      }
-                    }))
-                  }
-                />
-              </div>
-            ))}
+            {/* Repeat for protein, carbs, fat, fiber */}
           </div>
         </div>
 
-        <button type="submit" className="btn btn-primary">
-          {_id ? "Update Menu" : "Add Menu"}
+        {/* Image Upload */}
+        <div>
+          <label className="block mb-1">Menu Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files[0])}
+            className="w-full p-2 border rounded"
+          />
+          {menuData?.image?.url && (
+            <div className="mt-2">
+              <p className="text-sm">Current Image:</p>
+              <img 
+                src={menuData.image.url} 
+                alt="Menu item" 
+                className="h-20 object-cover rounded"
+              />
+            </div>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+        >
+          {isLoading ? 'Saving...' : menuData ? 'Update Menu' : 'Add Menu'}
         </button>
       </form>
     </div>
   );
 };
 
-export default EditFoodItem;
+export default MenuForm;
