@@ -71,7 +71,7 @@ const Orders = () => {
           apiUrl: "/api/orders",
         },
         restaurant: {
-          apiUrl: "/api/orders",
+          apiUrl: "/api/orders/restaurant",
         },
       };
 

@@ -58,7 +58,7 @@ const Header = ({ setSidebarOpen }: HeaderProps) => {
           </button>
           
           {/* Search bar */}
-          <div className="max-w-lg w-full lg:max-w-xs ml-4 md:ml-0 self-center">
+          {/* <div className="max-w-lg w-full lg:max-w-xs ml-4 md:ml-0 self-center">
             <label htmlFor="search" className="sr-only">Search</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -72,7 +72,7 @@ const Header = ({ setSidebarOpen }: HeaderProps) => {
                 type="search"
               />
             </div>
-          </div>
+          </div> */}
         </div>
         
         {/* Right side buttons */}

@@ -1,10 +1,10 @@
-import { useState } from "react";
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
-import Products from "./pages/Products";
+
 import ProductDetail from "./pages/ProductDetail";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
@@ -22,8 +22,11 @@ import Menu from "./pages/Menu";
 import DeliveryStaff from "./pages/DeliveryStaff";
 import ProfilePage from "./pages/Profile";
 import Reports from "./pages/Reports";
-import EditRestaurant from "./pages/editRestaurant";
+import EditRestaurant from "./pages/EditRestaurant";
 import ViewFoodItem from "./pages/ViewFoodItem";
+import AddFoodItem from "./pages/AddFoodItem";
+import EditFoodItem from "./pages/EditFoodItem";
+
 
 function App() {
   return (
@@ -66,6 +69,9 @@ function App() {
           <Route path="reports" element={<Reports />} />
           <Route path="edit" element={<EditRestaurant />} />
           <Route path="viewfooditem/:id" element={<ViewFoodItem />} />
+          <Route path="addfooditem" element={<AddFoodItem/>}/>
+           <Route path="editfooditem" element={<EditFoodItem/>}/> 
+          <Route path="editfooditem/:id" element={<EditFoodItem/>}/> 
 
         </Route>
         <Route path="*" element={<NotFound />} />

@@ -146,13 +146,13 @@ const Restaurant = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Restaurants</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Menus</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your customer orders and track their status
+          Manage your Menu and edit their status
         </p>
       </div>
       <div>
-        <Link to="/addrestaurant">Add Restaurant</Link>
+        <Link to="/editfooditem">Add Menu</Link>
       </div>
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
         {/* Filters and Search */}
@@ -342,7 +342,7 @@ const Restaurant = () => {
                     </Link>
 
                     <Link
-                      to={`/viewreataurant`}
+                      to={`/editfooditem/${restaurant._id}`}
                       className="text-yellow-600 hover:text-yellow-900 inline-flex items-center"
                     >
                       <Pencil className="h-4 w-4 mr-1" />
