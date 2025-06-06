@@ -60,20 +60,20 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
       name: "Customers",
       to: "/customers",
       icon: <Users size={20} />,
-      roles: ["admin", "restaurant"],
-    },
-    {
-      name: "Inventory",
-      to: "/inventory",
-      icon: <Package size={20} />,
       roles: ["admin"],
     },
-    {
-      name: "Settings",
-      to: "/settings",
-      icon: <Settings size={20} />,
-      roles: ["admin", "restaurant"],
-    },
+    // {
+    //   name: "Inventory",
+    //   to: "/inventory",
+    //   icon: <Package size={20} />,
+    //   roles: ["admin"],
+    // },
+    // {
+    //   name: "Settings",
+    //   to: "/settings",
+    //   icon: <Settings size={20} />,
+    //   roles: ["admin", "restaurant"],
+    // },
     // {
     //   name: "Menu",
     //   to: "/menu",
@@ -86,12 +86,12 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
       icon: <ShoppingBag size={20} />,
       roles: ["restaurant"],
     },
-    {
-      name: "Promotions",
-      to: "/promotions",
-      icon: <ShoppingCart size={20} />,
-      roles: ["admin"],
-    },
+    // {
+    //   name: "Promotions",
+    //   to: "/promotions",
+    //   icon: <ShoppingCart size={20} />,
+    //   roles: ["admin"],
+    // },
     {
       name: "Reports",
       to: "/reports",

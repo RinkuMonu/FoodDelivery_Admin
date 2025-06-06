@@ -78,8 +78,6 @@ const DeliveryStaff = () => {
   };
 
   const statuses = ["All", "Active", "Inactive"];
-
-  useEffect(() => {
     const fetchRestaurants = async () => {
       try {
         const response = await axiosInstance.get("api/riders");
@@ -93,15 +91,18 @@ const DeliveryStaff = () => {
       }
     };
 
+  useEffect(() => {
+  
+
     fetchRestaurants();
   }, []);
 
   const handleDelete = async (
-    restaurantId: string
+    riderId: string
   ): Promise<{ success: boolean; message?: string }> => {
     try {
       const response = await axiosInstance.delete(
-        `/api/restaurants/${riderId}`
+        `/api/riders/${riderId}`
       );
       if (response.data?.success) {
         // Re-fetch the updated list of restaurants

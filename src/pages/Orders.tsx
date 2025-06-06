@@ -1,4 +1,4 @@
-// Orders.tsx
+// Orders.tsx (TypeScript Version)
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -6,17 +6,18 @@ import {
   ChevronDown,
   Eye,
   Download,
-  Calendar,
+  // Calendar,
   ArrowUpDown,
 } from "lucide-react";
 import axiosInstance from "../components/AxiosInstance";
-import DatePicker from "react-datepicker";
+// import DatePicker from "react-datepicker";
 import dayjs from "dayjs";
 import "react-datepicker/dist/react-datepicker.css";
 import Papa from "papaparse";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { useAuth } from "../contexts/AuthContext";
 
 interface Order {
   _id: string;
@@ -39,20 +40,46 @@ interface SortConfig {
 const Orders = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "",
+    direction: null,
+  });
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>();
+  const [loading, setLoading] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [open, setOpen] = useState<boolean>(false);
+  const { user, token } = useAuth();
 
-  const statuses = ["All", "PLACED", "Processing", "Shipped", "Delivered", "Cancelled"];
+  const statuses: string[] = [
+    "All",
+    "PLACED",
+    "Processing",
+    "Shipped",
+    "Delivered",
+    "Cancelled",
+  ];
 
   useEffect(() => {
     const fetchOrders = async () => {
+      if (!user?.role || !token) return;
+      setLoading(true);
+
+      const orderConfig: Record<string, { apiUrl: string }> = {
+        admin: {
+          apiUrl: "/api/orders",
+        },
+        restaurant: {
+          apiUrl: "/api/orders",
+        },
+      };
+
+      const config = orderConfig[user?.role];
+      if (!config) return;
+
       try {
-        const response = await axiosInstance.get("/api/orders");
+        const response = await axiosInstance.get(config.apiUrl);
         setOrders(response?.data?.data);
       } catch (err) {
         console.error(err);
@@ -62,7 +89,7 @@ const Orders = () => {
       }
     };
     fetchOrders();
-  }, []);
+  }, [user?.role, token]);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -70,7 +97,8 @@ const Orders = () => {
       order.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user?.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = selectedStatus === "All" || order.orderStatus === selectedStatus;
+    const matchesStatus =
+      selectedStatus === "All" || order.orderStatus === selectedStatus;
     const orderDate = new Date(order.createdAt);
     const matchesDate =
       (!startDate && !endDate) ||
@@ -81,8 +109,8 @@ const Orders = () => {
 
   const sortedOrders = [...filteredOrders].sort((a, b) => {
     if (!sortConfig.key) return 0;
-    const aValue = (a as any)[sortConfig.key];
-    const bValue = (b as any)[sortConfig.key];
+    const aValue = (a as Record<string, any>)[sortConfig.key];
+    const bValue = (b as Record<string, any>)[sortConfig.key];
     if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
     if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
     return 0;
@@ -98,9 +126,12 @@ const Orders = () => {
   };
 
   const getSortIcon = (key: string) => {
-    if (sortConfig.key !== key) return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
-    if (sortConfig.direction === "ascending") return <ChevronDown className="h-4 w-4 text-primary-500" />;
-    if (sortConfig.direction === "descending") return <ChevronDown className="h-4 w-4 text-primary-500 rotate-180" />;
+    if (sortConfig.key !== key)
+      return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
+    if (sortConfig.direction === "ascending")
+      return <ChevronDown className="h-4 w-4 text-primary-500" />;
+    if (sortConfig.direction === "descending")
+      return <ChevronDown className="h-4 w-4 text-primary-500 rotate-180" />;
     return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
   };
 
@@ -137,20 +168,33 @@ const Orders = () => {
       o.orderStatus,
     ]);
     doc.autoTable({
-      head: [[
-        "Order ID", "Customer", "Email", "Restaurant", "Items", "Date", "Amount", "Payment", "Status"
-      ]],
+      head: [
+        [
+          "Order ID",
+          "Customer",
+          "Email",
+          "Restaurant",
+          "Items",
+          "Date",
+          "Amount",
+          "Payment",
+          "Status",
+        ],
+      ],
       body: tableData,
       startY: 20,
     });
     doc.save("orders.pdf");
   };
 
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Orders</h2>
-        <p className="mt-1 text-sm text-gray-500">Manage your customer orders and track their status</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Manage your customer orders and track their status
+        </p>
       </div>
 
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
@@ -171,7 +215,8 @@ const Orders = () => {
             {startDate && endDate && (
               <p className="text-sm text-gray-600 mt-2">
                 Showing <strong>{filteredOrders.length}</strong> orders from{" "}
-                {dayjs(startDate).format("DD MMM")} to {dayjs(endDate).format("DD MMM")}
+                {dayjs(startDate).format("DD MMM")} to{" "}
+                {dayjs(endDate).format("DD MMM")}
               </p>
             )}
           </div>
@@ -184,14 +229,16 @@ const Orders = () => {
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
                 {statuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
                 ))}
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <ChevronDown className="h-4 w-4 text-gray-500" />
               </div>
             </div>
-{/* 
+            {/* 
             <div className="relative inline-block">
               <button
                 onClick={() => setOpen(!open)}
@@ -219,10 +266,16 @@ const Orders = () => {
               )}
             </div> */}
 
-            <button onClick={exportCSV} className="btn btn-secondary h-10 flex items-center">
+            <button
+              onClick={exportCSV}
+              className="btn btn-secondary h-10 flex items-center"
+            >
               <Download className="h-4 w-4 mr-2" /> CSV
             </button>
-            <button onClick={exportPDF} className="btn btn-secondary h-10 flex items-center">
+            <button
+              onClick={exportPDF}
+              className="btn btn-secondary h-10 flex items-center"
+            >
               <Download className="h-4 w-4 mr-2" /> PDF
             </button>
           </div>
@@ -261,17 +314,38 @@ const Orders = () => {
             <tbody className="bg-white divide-y divide-gray-50">
               {sortedOrders.map((order) => (
                 <tr key={order._id} className="hover:bg-gray-30">
-                  <td className="px-6 py-4 whitespace-nowrap">{order.orderNumber}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.customer}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.user?.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.restaurant?.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.items?.quantity}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{new Date(order.createdAt).toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.finalAmount}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.paymentStatus}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.orderStatus}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.orderNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.customer}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.user?.email}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.restaurant?.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.items?.quantity}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {new Date(order.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.finalAmount}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.paymentStatus}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.orderStatus}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <Link to={`/orders/${order._id}`} className="text-primary-600 hover:text-primary-900 inline-flex items-center">
+                    <Link
+                      to={`/orders/${order._id}`}
+                      className="text-primary-600 hover:text-primary-900 inline-flex items-center"
+                    >
                       <Eye className="h-4 w-4 mr-1" /> View
                     </Link>
                   </td>

@@ -23,6 +23,7 @@ import DeliveryStaff from "./pages/DeliveryStaff";
 import ProfilePage from "./pages/Profile";
 import Reports from "./pages/Reports";
 import EditRestaurant from "./pages/editRestaurant";
+import ViewFoodItem from "./pages/ViewFoodItem";
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function App() {
           <Route path="menu" element={<Menu />} />
           <Route path="reports" element={<Reports />} />
           <Route path="edit" element={<EditRestaurant />} />
+          <Route path="viewfooditem/:id" element={<ViewFoodItem />} />
 
         </Route>
         <Route path="*" element={<NotFound />} />
