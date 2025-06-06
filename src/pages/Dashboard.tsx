@@ -27,7 +27,38 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import axiosInstance from "../components/AxiosInstance";
 
-// Demo data
+interface Order {
+  _id: string;
+  orderNumber: string;
+  createdAt: string;
+  finalAmount: number;
+  status: string;
+  orderStatus: string;
+  user: {
+    email: string;
+  };
+}
+
+interface DashboardData {
+  totalRevenue?: string;
+  totalOrders?: string;
+  totalCustomers?: string;
+  totalRestaurants?: string;
+  todayRevenue?: string;
+  todayOrders?: string;
+  todayCustomers?: string;
+  todayPendingOrders?: string;
+}
+
+interface StatCardProps {
+  title: string;
+  value?: string;
+  icon: React.ReactNode;
+  trend: "up" | "down" | "neutral";
+  percentage: number;
+  color: string;
+}
+
 const salesData = [
   { name: "Jan", value: 4000 },
   { name: "Feb", value: 3000 },
@@ -66,67 +97,7 @@ const categoryData = [
   { name: "Beauty", value: 8 },
 ];
 
-const recentOrders = [
-  {
-    id: "ORD-001",
-    customer: "John Doe",
-    date: "2025-03-01",
-    total: 235.89,
-    status: "Delivered",
-  },
-  {
-    id: "ORD-002",
-    customer: "Jane Smith",
-    date: "2025-03-02",
-    total: 125.99,
-    status: "Processing",
-  },
-  {
-    id: "ORD-003",
-    customer: "Robert Johnson",
-    date: "2025-03-03",
-    total: 345.5,
-    status: "Shipped",
-  },
-  {
-    id: "ORD-004",
-    customer: "Emily Davis",
-    date: "2025-03-03",
-    total: 89.99,
-    status: "Processing",
-  },
-  {
-    id: "ORD-005",
-    customer: "Michael Wilson",
-    date: "2025-03-04",
-    total: 432.75,
-    status: "Pending",
-  },
-];
-
-const topProducts = [
-  { id: 1, name: "Wireless Headphones", sold: 142, revenue: 12780 },
-  { id: 2, name: "Smart Watch", sold: 98, revenue: 19600 },
-  { id: 3, name: "Designer T-shirt", sold: 87, revenue: 4350 },
-  { id: 4, name: "Bluetooth Speaker", sold: 65, revenue: 7150 },
-  { id: 5, name: "Fitness Tracker", sold: 59, revenue: 5310 },
-];
-
-const StatCard = ({
-  title,
-  value,
-  icon,
-  trend,
-  percentage,
-  color,
-}: {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  trend: "up" | "down" | "neutral";
-  percentage: number;
-  color: string;
-}) => {
+const StatCard = ({ title, value, icon, trend, percentage, color }: StatCardProps) => {
   return (
     <div className="card">
       <div className="flex items-start justify-between">
@@ -151,9 +122,7 @@ const StatCard = ({
               : "text-gray-500"
           }`}
         >
-          {percentage}%{" "}
-          {trend === "up" ? "increase" : trend === "down" ? "decrease" : ""}{" "}
-          from last month
+          {percentage}% {trend === "up" ? "increase" : trend === "down" ? "decrease" : ""} from last month
         </span>
       </div>
     </div>
@@ -161,58 +130,57 @@ const StatCard = ({
 };
 
 const Dashboard = () => {
-  const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [orders, setOrders] = useState([]);
-  const [dashBoardData, setDashBoardData]= useState([])
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [dashBoardData, setDashBoardData] = useState<DashboardData>({});
+  const { user, token } = useAuth();
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
-
-    return () => {
-      clearInterval(timer);
-    };
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const hours = currentTime.getHours();
-  let greeting = "";
+  const greeting = hours < 12 ? "Good morning" : hours < 18 ? "Good afternoon" : "Good evening";
 
-  if (hours < 12) {
-    greeting = "Good morning";
-  } else if (hours < 18) {
-    greeting = "Good afternoon";
-  } else {
-    greeting = "Good evening";
-  }
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user?.role || !token) return;
 
-   const fetchOrder = async () => {
+      const orderConfig: Record<string, { apiUrl: string }> = {
+        admin: { apiUrl: "/api/orders" },
+        restaurant: { apiUrl: "/api/orders/restaurant" },
+      };
+
+      const config = orderConfig[user.role];
+      if (!config) return;
+
+      try {
+        const response = await axiosInstance.get(config.apiUrl);
+        setOrders(response?.data?.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchOrders();
+  }, [user?.role, token]);
+
+  const fetchDashboardData = async () => {
     try {
-      const response = await axiosInstance.get("/api/orders"); // ✅ Await added
-      setOrders(response?.data?.data || []); // ✅ Safe fallback
+      const response = await axiosInstance.get("/api/dashboard/summary");
+      setDashBoardData(response?.data);
     } catch (err) {
-      console.error("Failed to fetch orders:", err);
-      setOrders([]); // ✅ Fallback to empty array
+      console.error("Failed to fetch dashboard data:", err);
     }
   };
 
-  const ferchDashboadData = async()=>{
-    try{
-      const response = await axiosInstance.get("/api/dashboard/summary")
-      console.log("dashboard data", response)
-      setDashBoardData(response?.data)
-    }
-    catch(err){
-       console.error("Failed to fetch orders:", err);
-    }
-  }
- useEffect(() => {
- ferchDashboadData()
-  fetchOrder();
-}, []);
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
   return (
     <div className="space-y-6">
+      {/* Greeting */}
       <div className="border-b border-gray-200 pb-5">
         <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl">
           {greeting}, {user?.name || "Admin"}
@@ -222,40 +190,23 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Total Revenue"
-          value={dashBoardData?.totalRevenue}
-          icon={<DollarSign className="h-6 w-6 text-primary-600" />}
-          trend="up"
-          percentage={12.5}
-          color="primary"
-        />
-        <StatCard
-          title="Total Orders"
-          value={dashBoardData?.totalOrders}
-          icon={<ShoppingCart className="h-6 w-6 text-accent-600" />}
-          trend="up"
-          percentage={8.2}
-          color="accent"
-        />
-        <StatCard
-          title="Total Customers"
-          value={dashBoardData?.totalCustomers}
-          icon={<Users className="h-6 w-6 text-success-600" />}
-          trend="up"
-          percentage={4.6}
-          color="success"
-        />
-        <StatCard
-          title="Total Restaurant"
-          value={dashBoardData?.totalRestaurants}
-          icon={<Package className="h-6 w-6 text-warning-600" />}
-          trend="down"
-          percentage={2.3}
-          color="warning"
-        />
+        {user?.role === "admin" ? (
+          <>
+            <StatCard title="Total Revenue" value={dashBoardData.totalRevenue} icon={<DollarSign className="h-6 w-6 text-primary-600" />} trend="up" percentage={12.5} color="primary" />
+            <StatCard title="Total Orders" value={dashBoardData.totalOrders} icon={<ShoppingCart className="h-6 w-6 text-accent-600" />} trend="up" percentage={8.2} color="accent" />
+            <StatCard title="Total Customers" value={dashBoardData.totalCustomers} icon={<Users className="h-6 w-6 text-success-600" />} trend="up" percentage={4.6} color="success" />
+            <StatCard title="Total Restaurant" value={dashBoardData.totalRestaurants} icon={<Package className="h-6 w-6 text-warning-600" />} trend="down" percentage={2.3} color="warning" />
+          </>
+        ) : (
+          <>
+            <StatCard title="Today Revenue" value={dashBoardData.todayRevenue} icon={<DollarSign className="h-6 w-6 text-primary-600" />} trend="up" percentage={12.5} color="primary" />
+            <StatCard title="Today Orders" value={dashBoardData.todayOrders} icon={<ShoppingCart className="h-6 w-6 text-accent-600" />} trend="up" percentage={8.2} color="accent" />
+            <StatCard title="Today Customers" value={dashBoardData.todayCustomers} icon={<Users className="h-6 w-6 text-success-600" />} trend="up" percentage={4.6} color="success" />
+            <StatCard title="Total Pending Transaction" value={dashBoardData.todayPendingOrders} icon={<Package className="h-6 w-6 text-warning-600" />} trend="down" percentage={2.3} color="warning" />
+          </>
+        )}
       </div>
 
       {/* Charts */}
