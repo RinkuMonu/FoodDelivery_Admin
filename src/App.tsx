@@ -26,6 +26,7 @@ import EditRestaurant from "./pages/EditRestaurant";
 import ViewFoodItem from "./pages/ViewFoodItem";
 import AddFoodItem from "./pages/AddFoodItem";
 import EditFoodItem from "./pages/EditFoodItem";
+import Category from "../src/pages/category";
 
 
 function App() {
@@ -72,6 +73,7 @@ function App() {
           <Route path="addfooditem" element={<AddFoodItem/>}/>
            <Route path="editfooditem" element={<EditFoodItem/>}/> 
           <Route path="editfooditem/:id" element={<EditFoodItem/>}/> 
+          <Route path="category" element={<Category/>}/> 
 
         </Route>
         <Route path="*" element={<NotFound />} />
