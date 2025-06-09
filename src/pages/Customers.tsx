@@ -56,8 +56,8 @@ const Customers = () => {
 
   const filteredCustomers = users.filter((user) => {
     const matchesSearch =
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const statusText = user.isActive ? 'Active' : 'Inactive';
     const matchesStatus = selectedStatus === 'All' || statusText === selectedStatus;

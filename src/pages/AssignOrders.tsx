@@ -16,27 +16,38 @@ import { toast } from "react-toastify";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+interface User {
+  _id: string;
+  fullName?: string;
+  name?: string;
+  email?: string;
+  mobile?: string;
+  isActive?: boolean;
+  profilePicture?: string;
+  assignedOrders?: number;
+  spent?: number;
+  lastOrder?: string;
+  vehicleNumber?: string;
+  status?: string;
+}
 
-// Mock customer data
 const AssignOrder = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [sortConfig, setSortConfig] = useState<{
-    key: string;
+    key: keyof User;
     direction: "ascending" | "descending" | null;
-  }>({ key: "", direction: null });
-  const [users, setUsers] = useState([]);
+  }>({ key: "name", direction: null });
+  const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [id, setid] = useState(""); // State to store order ID
-//   const {id} = useParams()
+  const [id, setId] = useState("");
 
-  // Extract order ID from URL
   useEffect(() => {
     const pathParts = window.location.pathname.split('/');
     const id = pathParts[pathParts.length - 1];
     if (id) {
-      setid(id);
+      setId(id);
     }
   }, []);
 
@@ -52,12 +63,13 @@ const AssignOrder = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Sort customers
   const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    if (!sortConfig.key) return 0;
+    if (!sortConfig.key || sortConfig.direction === null) return 0;
 
-    const aValue = a[sortConfig.key as keyof typeof a];
-    const bValue = b[sortConfig.key as keyof typeof b];
+    const aValue = a[sortConfig.key];
+    const bValue = b[sortConfig.key];
+
+    if (aValue === undefined || bValue === undefined) return 0;
 
     if (aValue < bValue) {
       return sortConfig.direction === "ascending" ? -1 : 1;
@@ -68,7 +80,7 @@ const AssignOrder = () => {
     return 0;
   });
 
-  const requestSort = (key: string) => {
+  const requestSort = (key: keyof User) => {
     let direction: "ascending" | "descending" | null = "ascending";
     if (sortConfig.key === key) {
       if (sortConfig.direction === "ascending") {
@@ -80,7 +92,7 @@ const AssignOrder = () => {
     setSortConfig({ key, direction });
   };
 
-  const getSortIcon = (key: string) => {
+  const getSortIcon = (key: keyof User) => {
     if (sortConfig.key !== key) {
       return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
     }
@@ -94,6 +106,7 @@ const AssignOrder = () => {
   };
 
   const statuses = ["All", "Active", "Inactive"];
+
   const fetchRestaurants = async () => {
     try {
       const response = await axiosInstance.get("api/riders");
@@ -106,7 +119,6 @@ const AssignOrder = () => {
     }
   };
 
-  // Handle order assignment
   const handleAssign = async (deliveryPartnerId: string) => {
     if (!id) {
       toast.error("Order ID is missing");
@@ -116,9 +128,9 @@ const AssignOrder = () => {
     try {
       await axiosInstance.put(
         `api/orders/${id}/assign-delivery`,
-         {deliveryPartnerId} 
+        { deliveryPartnerId } 
       );
-       fetchRestaurants()
+      fetchRestaurants();
       toast.success("Order assigned successfully!");
     } catch (err) {
       console.error(err);
@@ -133,9 +145,9 @@ const AssignOrder = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">DeliveryStaff</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Delivery Staff</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your DeliveryStaff accounts and view their Delivery history
+          Manage your Delivery Staff accounts and view their Delivery history
         </p>
         {id && (
           <p className="mt-1 text-sm text-blue-600">
@@ -143,10 +155,9 @@ const AssignOrder = () => {
           </p>
         )}
       </div>
-        <ToastContainer />
+      <ToastContainer />
 
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        {/* Filters and Search */}
         <div className="p-4 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
           <div className="w-full max-w-lg">
             <div className="relative">
@@ -186,7 +197,6 @@ const AssignOrder = () => {
           </div>
         </div>
 
-        {/* Customers Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -202,7 +212,7 @@ const AssignOrder = () => {
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("location")}
+                  onClick={() => requestSort("mobile")}
                 >
                   <div className="flex items-center">
                     Mobile No.
@@ -211,45 +221,43 @@ const AssignOrder = () => {
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("email")}
+                  onClick={() => requestSort("assignedOrders")}
                 >
                   <div className="flex items-center">
                     Assigned Orders
-                    {getSortIcon("Assigned")}
-                  </div>
-                </th>{" "}
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("deliveries")}
-                >
-                  <div className="flex items-center">
-                    Total Deliveries.
-                    {getSortIcon("deliveries")}
+                    {getSortIcon("assignedOrders")}
                   </div>
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("rating")}
+                  onClick={() => requestSort("spent")}
+                >
+                  <div className="flex items-center">
+                    Total Deliveries
+                    {getSortIcon("spent")}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => requestSort("lastOrder")}
                 >
                   <div className="flex items-center">
                     Rating
-                    {getSortIcon("rating")}
+                    {getSortIcon("lastOrder")}
                   </div>
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("Vehicle")}
+                  onClick={() => requestSort("vehicleNumber")}
                 >
                   <div className="flex items-center">
                     Vehicle No.
-                    {getSortIcon("Vehicle")}
+                    {getSortIcon("vehicleNumber")}
                   </div>
                 </th>
-              
-               
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("earnings")}
+                  onClick={() => requestSort("status")}
                 >
                   <div className="flex items-center">
                     Status
@@ -263,56 +271,54 @@ const AssignOrder = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {sortedCustomers.map((customer) => (
-                <tr key={customer?._id} className="hover:bg-gray-50">
+                <tr key={customer._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0">
                         <img
                           className="h-10 w-10 rounded-full"
-                          src={customer?.profilePicture}
-                          alt={customer?.fullName}
+                          src={customer.profilePicture}
+                          alt={customer.fullName || customer.name}
                         />
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {customer?.name}
+                          {customer.fullName || customer.name}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {customer?.email}
+                          {customer.email}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">
-                      {customer?.mobile}
+                      {customer.mobile}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">
-                      {customer?.assignedOrders}
+                      {customer.assignedOrders}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">
-                      ${customer?.spent?.toFixed(2)}
+                      ${customer.spent?.toFixed(2)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">
-                      {customer?.lastOrder}
+                      {customer.lastOrder}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">
-                      {customer?.vehicleNumber}
+                      {customer.vehicleNumber}
                     </span>
                   </td>
-                  
-                 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">
-                      {customer?.status}
+                      {customer.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -331,7 +337,6 @@ const AssignOrder = () => {
             </tbody>
           </table>
 
-          {/* Empty state */}
           {sortedCustomers.length === 0 && (
             <div className="px-6 py-10 text-center">
               <p className="text-gray-500">
@@ -341,7 +346,6 @@ const AssignOrder = () => {
           )}
         </div>
 
-        {/* Pagination */}
         <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <button className="btn btn-secondary">Previous</button>

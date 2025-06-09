@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react"
 import axiosInstance from "../components/AxiosInstance"
 
 interface Category {
-  id: string
+  _id: string
   name: string
   description: string
   type: string
@@ -49,7 +49,7 @@ export default function CategoryManagement() {
     try {
       const response = await axiosInstance.get("/api/categories")
       setCategories(response.data)
-      console.log("responseeeee", response)
+      console.log("responseeeeededed", response)
     } catch (error: any) {
       console.error("Error fetching categories:", error)
       const errorMessage = error.response?.data?.message || "Failed to fetch categories."
@@ -99,7 +99,7 @@ export default function CategoryManagement() {
 
       setCategories((prev) =>
         prev.map((cat) =>
-          cat.id === categoryId ? { ...cat, image: response.data.imageUrl || URL.createObjectURL(file) } : cat,
+          cat._id === categoryId ? { ...cat, image: response.data.imageUrl || URL.createObjectURL(file) } : cat,
         ),
       )
       showToast("Success", "Image uploaded successfully!", "success")
@@ -370,7 +370,7 @@ export default function CategoryManagement() {
                   </div>
                 ) : (
                   categories.map((category) => (
-                    <div key={category.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div key={category._id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-3">
                           {category.image ? (
@@ -398,11 +398,11 @@ export default function CategoryManagement() {
                           </span>
                           <button
                             onClick={() => handleDeleteCategory(category._id)}
-                            disabled={deletingCategory === category.id}
+                            disabled={deletingCategory === category._id}
                             className="text-red-600 hover:text-red-800 p-1 rounded disabled:opacity-50 transition-colors"
                             title="Delete category"
                           >
-                            {deletingCategory === category.id ? (
+                            {deletingCategory === category._id ? (
                               <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
                             ) : (
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -423,16 +423,16 @@ export default function CategoryManagement() {
                         <input
                           type="file"
                           accept="image/*"
-                          onChange={(e) => handleFileSelect(category.id, e)}
-                          ref={(el) => (fileInputRefs.current[category.id] = el)}
+                          onChange={(e) => handleFileSelect(category._id, e)}
+                          ref={(el) => (fileInputRefs.current[category._id] = el)}
                           className="hidden"
                         />
                         <button
-                          onClick={() => fileInputRefs.current[category.id]?.click()}
-                          disabled={uploadingImage === category.id}
+                          onClick={() => fileInputRefs.current[category._id]?.click()}
+                          disabled={uploadingImage === category._id}
                           className="flex items-center gap-1 px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md disabled:opacity-50 transition-colors"
                         >
-                          {uploadingImage === category.id ? (
+                          {uploadingImage === category._id ? (
                             <>
                               <div className="w-3 h-3 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
                               Uploading...
@@ -454,52 +454,10 @@ export default function CategoryManagement() {
         </div>
 
         {/* API Information */}
-        <div className="mt-6 bg-white rounded-lg shadow border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">API Configuration</h2>
-            <p className="text-sm text-gray-500">Using Axios instance with base URL: http://192.168.32.18:4080</p>
-          </div>
-          <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Create Category</label>
-              <code className="block p-3 bg-gray-100 rounded-md text-sm font-mono text-gray-800">
-                POST /api/categories
-              </code>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Get Categories</label>
-              <code className="block p-3 bg-gray-100 rounded-md text-sm font-mono text-gray-800">
-                GET /api/categories
-              </code>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
-              <code className="block p-3 bg-gray-100 rounded-md text-sm font-mono text-gray-800">
-                PUT /api/categories/{"{categoryId}"}/upload-image
-              </code>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Delete Category</label>
-              <code className="block p-3 bg-gray-100 rounded-md text-sm font-mono text-gray-800">
-                DELETE /api/categories/{"{categoryId}"}
-              </code>
-            </div>
-
-            <hr className="my-3" />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Authentication</label>
-              <code className="block p-3 bg-gray-100 rounded-md text-sm font-mono text-gray-800">
-                Authorization: Bearer {"{token from localStorage}"}
-              </code>
-            </div>
-          </div>
-        </div>
+    
       </div>
 
-      <style jsx>{`
+      <style >{`
         @keyframes slide-in {
           from {
             transform: translateX(100%);

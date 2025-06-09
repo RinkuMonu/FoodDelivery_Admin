@@ -54,10 +54,12 @@ const Orders = () => {
   const statuses: string[] = [
     "All",
     "PLACED",
-    "Processing",
-    "Shipped",
-    "Delivered",
-    "Cancelled",
+    "CONFIRMED",
+    "PREPARING",
+    "READY_FOR_PICKUP",
+    "OUT_FOR_DELIVERY",
+    "DELIVERED",
+    "CANCELLED"
   ];
 
   useEffect(() => {
@@ -79,6 +81,7 @@ const Orders = () => {
 
       try {
         const response = await axiosInstance.get(config.apiUrl);
+        console.log("response-----order",response)
         setOrders(response?.data?.data);
       } catch (err) {
         console.error(err);
@@ -103,35 +106,35 @@ const Orders = () => {
     return response.data;
   };
 
-  const handleAssignOrder = async (orderId: string) => {
-    try {
-      const deliveryPartnerId = "682c33b376fb77d16a18bd92"; // Replace with dynamic later
-      const result = await assignOrderToDeliveryPartner(
-        orderId,
-        deliveryPartnerId
-      );
-      alert(`Order ${orderId} assigned.`);
+  // const handleAssignOrder = async (orderId: string) => {
+  //   try {
+  //     const deliveryPartnerId = "682c33b376fb77d16a18bd92"; // Replace with dynamic later
+  //     const result = await assignOrderToDeliveryPartner(
+  //       orderId,
+  //       deliveryPartnerId
+  //     );
+  //     alert(`Order ${orderId} assigned.`);
 
-      // Refetch orders or update local state
-      setOrders(
-        (prevOrders) =>
-          prevOrders
-            .map((order) =>
-              order._id === orderId
-                ? {
-                    ...order,
-                    deliveryPartner: deliveryPartnerId,
-                    orderStatus: result.data.orderStatus,
-                  }
-                : order
-            )
-            .filter((order) => order.orderStatus !== "Delivered") // Remove delivered orders
-      );
-    } catch (err) {
-      console.error(err);
-      alert("Failed to assign order.");
-    }
-  };
+  //     // Refetch orders or update local state
+  //     setOrders(
+  //       (prevOrders) =>
+  //         prevOrders
+  //           .map((order) =>
+  //             order._id === orderId
+  //               ? {
+  //                   ...order,
+  //                   deliveryPartner: deliveryPartnerId,
+  //                   orderStatus: result.data.orderStatus,
+  //                 }
+  //               : order
+  //           )
+  //           .filter((order) => order.orderStatus !== "Delivered") // Remove delivered orders
+  //     );
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Failed to assign order.");
+  //   }
+  // };
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =

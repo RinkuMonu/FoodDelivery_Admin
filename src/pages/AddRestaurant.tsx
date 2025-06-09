@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axiosInstance from "../components/AxiosInstance";
 import { Plus, X } from "lucide-react";
@@ -13,30 +13,137 @@ const mapContainerStyle = {
 };
 
 const center = {
-  lat: 26.9124, // Jaipur, India
+  lat: 26.9124,
   lng: 75.7873,
 };
 
+interface BankDetails {
+  accountHolderName: string;
+  accountNumber: string;
+  ifscCode: string;
+  bankName: string;
+  branchName: string;
+}
+
+interface SocialLinks {
+  facebook: string;
+  instagram: string;
+}
+
+interface OpeningHours {
+  monday: string;
+  tuesday: string;
+  wednesday: string;
+  thursday: string;
+  friday: string;
+  saturday: string;
+  sunday: string;
+}
+
+interface Service {
+  name: string;
+  rate: string;
+  duration: string;
+  gender: string;
+}
+
+interface FormData {
+  salonOwnerName: string;
+  salonName: string;
+  mobileNumber: string;
+  email: string;
+  address: string;
+  status: string;
+  locationMapUrl: string;
+  salonTitle: string;
+  salonDescription: string;
+  aadharNumber: string;
+  pancardNumber: string;
+  bankDetails: BankDetails;
+  socialLinks: SocialLinks;
+  openingHours: OpeningHours;
+  facilities: string[];
+  services: Service[];
+  category: string;
+  salonPhotos: (string | File)[];
+  salonAgreement: File | null;
+}
+
+interface User {
+  _id?: string;
+  salonOwnerName?: string;
+  salonName?: string;
+  mobileNumber?: string;
+  email?: string;
+  address?: string;
+  salonAddress?: string;
+  lat?: number;
+  lng?: number;
+  locationMapUrl?: string;
+  salonTitle?: string;
+  salonDescription?: string;
+  aadharNumber?: string;
+  pancardNumber?: string;
+  bankDetails?: {
+    accountHolderName: string;
+    accountNumber: string;
+    ifscCode: string;
+    bankName: string;
+    branchName: string;
+  };
+  socialLinks?: {
+    facebook: string;
+    instagram: string;
+  };
+  openingHours?: {
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    sunday: string;
+  };
+  facilities?: string[];
+  services?: {
+    title?: string;
+    rate?: string;
+    duration?: string;
+    gender?: string;
+  }[];
+  category?: string;
+  salonPhotos?: string[];
+  salonAgreement?: File | null;
+}
+
+interface LocationState {
+  user?: User;
+}
+
 export default function AddRestaurant() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const user = location.state?.user || {};
+  const state = location.state as LocationState;
+  const user = state?.user || {};
   const userId = user._id || "";
+  const navigate = useNavigate();
 
   const [showModal, setShowModal] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const [latitude, setLatitude] = useState(user.lat || center.lat);
   const [longitude, setLongitude] = useState(user.lng || center.lng);
-  const [fullAddress, setFullAddress] = useState(user.salonAddress || "");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [facilityInput, setFacilityInput] = useState("");
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [agreementPreview, setAgreementPreview] = useState<string | null>(null);
 
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: "AIzaSyCklkVV3ho7yawqRP-imgtd1OtfbrH_akU", // 👈 direct key
+    googleMapsApiKey: "AIzaSyCklkVV3ho7yawqRP-imgtd1OtfbrH_akU",
   });
 
-  // Initialize form data
-  const [formData, setFormData] = useState({
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const agreementInputRef = useRef<HTMLInputElement>(null);
+
+  const initialFormData: FormData = {
     salonOwnerName: user?.salonOwnerName || "",
     salonName: user?.salonName || "",
     mobileNumber: user?.mobileNumber || "",
@@ -48,22 +155,25 @@ export default function AddRestaurant() {
     salonDescription: user?.salonDescription || "",
     aadharNumber: user?.aadharNumber || "",
     pancardNumber: user?.pancardNumber || "",
-    bankDetails: user?.bankDetails || {
-      accountHolderName: "",
-      accountNumber: "",
-      ifscCode: "",
-      bankName: "",
-      branchName: "",
+    bankDetails: {
+      accountHolderName: user?.bankDetails?.accountHolderName || "",
+      accountNumber: user?.bankDetails?.accountNumber || "",
+      ifscCode: user?.bankDetails?.ifscCode || "",
+      bankName: user?.bankDetails?.bankName || "",
+      branchName: user?.bankDetails?.branchName || "",
     },
-    socialLinks: user?.socialLinks || { facebook: "", instagram: "" },
-    openingHours: user?.openingHours || {
-      monday: "9:00 AM - 8:00 PM",
-      tuesday: "9:00 AM - 8:00 PM",
-      wednesday: "9:00 AM - 8:00 PM",
-      thursday: "9:00 AM - 8:00 PM",
-      friday: "9:00 AM - 8:00 PM",
-      saturday: "10:00 AM - 6:00 PM",
-      sunday: "Closed",
+    socialLinks: {
+      facebook: user?.socialLinks?.facebook || "",
+      instagram: user?.socialLinks?.instagram || "",
+    },
+    openingHours: {
+      monday: user?.openingHours?.monday || "9:00 AM - 8:00 PM",
+      tuesday: user?.openingHours?.tuesday || "9:00 AM - 8:00 PM",
+      wednesday: user?.openingHours?.wednesday || "9:00 AM - 8:00 PM",
+      thursday: user?.openingHours?.thursday || "9:00 AM - 8:00 PM",
+      friday: user?.openingHours?.friday || "9:00 AM - 8:00 PM",
+      saturday: user?.openingHours?.saturday || "10:00 AM - 6:00 PM",
+      sunday: user?.openingHours?.sunday || "Closed",
     },
     facilities: user?.facilities || [],
     services: user?.services?.map((service) => ({
@@ -82,75 +192,21 @@ export default function AddRestaurant() {
     category: user?.category || "Beauty",
     salonPhotos: user?.salonPhotos || [],
     salonAgreement: user?.salonAgreement || null,
-  });
+  };
 
-  // const [restaurantData, setRestaurantData] = useState({
-  //   name: '',
-  //   description: '',
-  //   street: '',
-  //   city: '',
-  //   state: '',
-  //   zipCode: '',
-  //   country: '',
-  //   phone: '',
-  //   alternatePhone: '',
-  //   email: '',
-  //   cuisine: '',
-  //   tags: '',
-  //   rating: '',
-  //   timings: [
-  //     { day: 'Monday', opening: '', closing: '', closed: false },
-  //     { day: 'Tuesday', opening: '', closing: '', closed: false },
-  //     { day: 'Wednesday', opening: '', closing: '', closed: false },
-  //     { day: 'Thursday', opening: '', closing: '', closed: false },
-  //     { day: 'Friday', opening: '', closing: '', closed: false },
-  //     { day: 'Saturday', opening: '', closing: '', closed: false },
-  //     { day: 'Sunday', opening: '', closing: '', closed: false },
-  //   ],
-  //   serviceOptions: {
-  //     dineIn: true,
-  //     takeaway: true,
-  //     delivery: true,
-  //   },
-  //   deliveryRadius: 10,
-  //   minOrderAmount: 200,
-  //   avgDeliveryTime: 40,
-  //   deliveryFee: 30,
-  //   packagingCharges: 10,
-  //   isActive: true,
-  //   isVerified: true,
-  //   isPromoted: false,
-  //   bankDetails: {
-  //     accountName: '',
-  //     accountNumber: '',
-  //     bankName: '',
-  //     ifscCode: '',
-  //   },
-  //   documents: {
-  //     fssaiLicense: {
-  //       number: '',
-  //       expiryDate: '',
-  //       image: '',
-  //     },
-  //     gstNumber: '',
-  //     panCard: '',
-  //   },
-  // });
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
-  const [facilityInput, setFacilityInput] = useState("");
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [agreementPreview, setAgreementPreview] = useState(null);
-  const fileInputRef = useRef(null);
-  const agreementInputRef = useRef(null);
-
-  // Handle form input changes
-  const handleChange = (e) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle social links changes
-  const handleSocialLinkChange = (platform, value) => {
+  const handleSocialLinkChange = (
+    platform: keyof SocialLinks,
+    value: string
+  ) => {
     setFormData({
       ...formData,
       socialLinks: {
@@ -160,7 +216,7 @@ export default function AddRestaurant() {
     });
   };
 
-  const handleBankDetails = (name, value) => {
+  const handleBankDetails = (name: keyof BankDetails, value: string) => {
     setFormData({
       ...formData,
       bankDetails: {
@@ -170,8 +226,7 @@ export default function AddRestaurant() {
     });
   };
 
-  // Handle opening hours changes
-  const handleOpeningHoursChange = (day, value) => {
+  const handleOpeningHoursChange = (day: keyof OpeningHours, value: string) => {
     setFormData({
       ...formData,
       openingHours: {
@@ -181,7 +236,6 @@ export default function AddRestaurant() {
     });
   };
 
-  // Handle facilities
   const handleAddFacility = () => {
     if (facilityInput && !formData.facilities.includes(facilityInput)) {
       setFormData({
@@ -192,7 +246,7 @@ export default function AddRestaurant() {
     }
   };
 
-  const handleRemoveFacility = (index) => {
+  const handleRemoveFacility = (index: number) => {
     const newFacilities = [...formData.facilities];
     newFacilities.splice(index, 1);
     setFormData({
@@ -201,11 +255,13 @@ export default function AddRestaurant() {
     });
   };
 
-  // Handle services
-  const handleServiceChange = (index, e) => {
+  const handleServiceChange = (
+    index: number,
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     const newServices = [...formData.services];
-    newServices[index][name] = value;
+    newServices[index] = { ...newServices[index], [name]: value };
     setFormData({
       ...formData,
       services: newServices,
@@ -222,7 +278,7 @@ export default function AddRestaurant() {
     });
   };
 
-  const removeService = (index) => {
+  const removeService = (index: number) => {
     const newServices = [...formData.services];
     newServices.splice(index, 1);
     setFormData({
@@ -231,24 +287,26 @@ export default function AddRestaurant() {
     });
   };
 
-  // Handle image uploads
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
 
+    const files = Array.from(e.target.files);
     if (files.length + formData.salonPhotos.length > 5) {
       alert("You can upload a maximum of 5 images");
       return;
     }
 
-    const newImagePreviews = [];
-    const newImages = [];
+    const newImagePreviews: string[] = [];
+    const newImages: File[] = [];
 
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        newImagePreviews.push(reader.result);
-        if (newImagePreviews.length === files.length) {
-          setImagePreviews([...imagePreviews, ...newImagePreviews]);
+        if (typeof reader.result === "string") {
+          newImagePreviews.push(reader.result);
+          if (newImagePreviews.length === files.length) {
+            setImagePreviews([...imagePreviews, ...newImagePreviews]);
+          }
         }
       };
       reader.readAsDataURL(file);
@@ -261,27 +319,24 @@ export default function AddRestaurant() {
     });
   };
 
-  const removeImage = (index) => {
+  const removeImage = (index: number) => {
     const newImages = [...formData.salonPhotos];
     const newPreviews = [...imagePreviews];
-
     newImages.splice(index, 1);
     newPreviews.splice(index, 1);
-
-    setFormData({
-      ...formData,
-      salonPhotos: newImages,
-    });
+    setFormData({ ...formData, salonPhotos: newImages });
     setImagePreviews(newPreviews);
   };
 
-  // Handle agreement upload
-  const handleAgreementUpload = (e) => {
+  const handleAgreementUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAgreementPreview(reader.result);
+        if (typeof reader.result === "string") {
+          setAgreementPreview(reader.result);
+        }
       };
       reader.readAsDataURL(file);
       setFormData({
@@ -291,11 +346,11 @@ export default function AddRestaurant() {
     }
   };
 
-  // Location modal functions
   const handleCloseModal = () => setShowModal(false);
   const handleShowModal = () => setShowModal(true);
 
-  const handleMapClick = (event) => {
+  const handleMapClick = (event: google.maps.MapMouseEvent) => {
+    if (!event.latLng) return;
     const lat = event.latLng.lat();
     const lng = event.latLng.lng();
     setLatitude(lat);
@@ -311,8 +366,7 @@ export default function AddRestaurant() {
     handleCloseModal();
   };
 
-  // Form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsUpdating(true);
     setError(null);
@@ -343,7 +397,7 @@ export default function AddRestaurant() {
         },
       };
 
-      await axiosInstance.post(`/api/restaurants'/${userId}`, detailsData);
+      await axiosInstance.post(`/api/restaurants/${userId}`, detailsData);
 
       const mediaFormData = new FormData();
       let hasMediaToUpdate = false;
@@ -374,74 +428,15 @@ export default function AddRestaurant() {
 
       alert("Salon Updated Successfully!");
       navigate("/distributor");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating salon:", error);
       setError(error.response?.data?.error || "Failed to update salon!");
     } finally {
       setIsUpdating(false);
     }
   };
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault(); // Prevent page reload
 
-  //   const token = 'your-jwt-token-here'; // Replace with your actual token
-
-  //   // Format data to match your API request structure
-  //   const data = {
-  //     name: restaurantData.name,
-  //     description: restaurantData.description,
-  //     owner: '68302306dafcd8c16252f49d', // Replace with actual owner ID
-  //     address: {
-  //       street: restaurantData.street,
-  //       city: restaurantData.city,
-  //       state: restaurantData.state,
-  //       zipCode: restaurantData.zipCode,
-  //       country: restaurantData.country,
-  //     },
-  //     location: {
-  //       type: 'Point',
-  //       coordinates: [26.804488, 75.880558], // Replace with actual coordinates
-  //     },
-  //     contact: {
-  //       phone: restaurantData.phone,
-  //       alternatePhone: restaurantData.alternatePhone,
-  //       email: restaurantData.email,
-  //     },
-  //     cuisine: ['665004e2d0b3980a7ad6ae13', '665004e2d0b3980a7ad6ae14'], // Replace with actual cuisine IDs
-  //     menu: ['665005a3d0b3980a7ad6ae55', '665005a3d0b3980a7ad6ae56'], // Replace with actual menu IDs
-  //     images: ['https://example.com/images/restaurant1.jpg', 'https://example.com/images/restaurant2.jpg'], // Replace with actual image URLs
-  //     coverImage: 'https://example.com/images/cover.jpg', // Replace with actual cover image URL
-  //     rating: parseFloat(restaurantData.rating),
-  //     timings: restaurantData.timings,
-  //     serviceOptions: restaurantData.serviceOptions,
-  //     deliveryRadius: restaurantData.deliveryRadius,
-  //     minOrderAmount: restaurantData.minOrderAmount,
-  //     avgDeliveryTime: restaurantData.avgDeliveryTime,
-  //     deliveryFee: restaurantData.deliveryFee,
-  //     packagingCharges: restaurantData.packagingCharges,
-  //     tags: restaurantData.tags.split(',').map(tag => tag.trim()), // Split tags into an array
-  //     isActive: restaurantData.isActive,
-  //     isVerified: restaurantData.isVerified,
-  //     isPromoted: restaurantData.isPromoted,
-  //     bankDetails: restaurantData.bankDetails,
-  //     documents: restaurantData.documents,
-  //   };
-
-  //   try {
-  //     const response = await axios.post('http://192.168.1.15:4080/api/restaurants', data, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-  //     console.log(response.data);
-  //     alert("Restaurant added successfully!");
-  //   } catch (error) {
-  //     console.error("There was an error adding the restaurant:", error);
-  //     alert("Failed to add restaurant");
-  //   }}
-
-  // Render the form
+  // JSX remains mostly the same as original with proper type annotations
   return (
     <div className="container mx-auto px-6 py-4">
       <h1 className="text-2xl font-bold mb-4">Add Restaurant</h1>
@@ -465,7 +460,6 @@ export default function AddRestaurant() {
                 name="salonOwnerName"
                 value={formData.salonOwnerName}
                 required
-                
               />
             </div>
 
@@ -536,7 +530,7 @@ export default function AddRestaurant() {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-               Tags (comma separated):
+                Tags (comma separated):
               </label>
               <input
                 type="text"
@@ -547,7 +541,7 @@ export default function AddRestaurant() {
                 required
               />
             </div>
-              <div className="mb-4">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Gst Number
               </label>
@@ -772,8 +766,8 @@ export default function AddRestaurant() {
             </div>
           </div>
         </div>
-         {/* Documents */}
-         <div className="bg-white shadow rounded-lg mb-6 overflow-hidden">
+        {/* Documents */}
+        <div className="bg-white shadow rounded-lg mb-6 overflow-hidden">
           <div className="bg-gray-50 px-4 py-3 border-b">
             <h5 className="text-lg font-medium text-gray-900">Fssai License</h5>
           </div>
@@ -807,40 +801,39 @@ export default function AddRestaurant() {
                   placeholder="Expiry Date"
                 />
               </div>
-              
             </div>
-              <div className="bg-white shadow rounded-lg mb-6 overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b">
-            <h5 className="text-lg font-medium text-gray-900">
-              Fassi License Pdf
-            </h5>
-          </div>
-          <div className="p-4">
-            <div className="mb-4">
-              <input
-                type="file"
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                ref={agreementInputRef}
-                onChange={handleAgreementUpload}
-                accept=".pdf,.doc,.docx"
-              />
+            <div className="bg-white shadow rounded-lg mb-6 overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b">
+                <h5 className="text-lg font-medium text-gray-900">
+                  Fassi License Pdf
+                </h5>
+              </div>
+              <div className="p-4">
+                <div className="mb-4">
+                  <input
+                    type="file"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    ref={agreementInputRef}
+                    onChange={handleAgreementUpload}
+                    accept=".pdf,.doc,.docx"
+                  />
+                </div>
+                {agreementPreview && (
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                    <p className="text-sm text-blue-700">
+                      New agreement file selected for upload
+                    </p>
+                  </div>
+                )}
+                {formData.salonAgreement && !agreementPreview && (
+                  <div className="bg-gray-50 border-l-4 border-gray-400 p-4 mb-4">
+                    <p className="text-sm text-gray-700">
+                      Existing agreement file is attached
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-            {agreementPreview && (
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-                <p className="text-sm text-blue-700">
-                  New agreement file selected for upload
-                </p>
-              </div>
-            )}
-            {formData.salonAgreement && !agreementPreview && (
-              <div className="bg-gray-50 border-l-4 border-gray-400 p-4 mb-4">
-                <p className="text-sm text-gray-700">
-                  Existing agreement file is attached
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
           </div>
         </div>
 

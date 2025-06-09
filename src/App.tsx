@@ -17,13 +17,13 @@ import Restaurant from "./pages/Restaurant";
 import AddRestaurant from "./pages/AddRestaurant";
 import ViewRestaurant from "./pages/ViewRestaurant";
 import FoodItem from "./pages/FoodItem";
-import Menu from "./pages/Menu";
+
 import DeliveryStaff from "./pages/DeliveryStaff";
 import ProfilePage from "./pages/Profile";
 import Reports from "./pages/Reports";
 import EditRestaurant from "./pages/EditRestaurant";
 import ViewFoodItem from "./pages/ViewFoodItem";
-import AddFoodItem from "./pages/AddFoodItem";
+
 import EditFoodItem from "./pages/EditFoodItem";
 import AddRestauran from "./pages/AddRestauran";
 import AssignOrder from "./pages/AssignOrders";
@@ -68,11 +68,11 @@ function App() {
           <Route path="fooditem" element={<FoodItem />} />
           <Route path="delivery" element={<DeliveryStaff />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="menu" element={<Menu />} />
+    
           <Route path="reports" element={<Reports />} />
           <Route path="edit" element={<EditRestaurant />} />
           <Route path="viewfooditem/:id" element={<ViewFoodItem />} />
-          <Route path="addfooditem" element={<AddFoodItem />} />
+     
           <Route path="editfooditem" element={<EditFoodItem />} />
           <Route path="editfooditem/:id" element={<EditFoodItem />} />
           <Route path="assignorder/:id" element={<AssignOrder />} />
