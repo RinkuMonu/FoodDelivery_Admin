@@ -54,7 +54,7 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
       name: "Restaurant",
       to: "/restaurant",
       icon: <ShoppingCart size={20} />,
-      roles: ["admin"],
+      roles: ["admin", ],
     },
     {
       name: "Customers",

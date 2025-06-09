@@ -241,15 +241,7 @@ const DeliveryStaff = () => {
                     {getSortIcon("earnings")}
                   </div>
                 </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("balance")}
-                >
-                  <div className="flex items-center">
-                    Wallet Balance
-                    {getSortIcon("balance")}
-                  </div>
-                </th>
+               
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => requestSort("earnings")}
@@ -316,11 +308,7 @@ const DeliveryStaff = () => {
                       {customer?.vehicleNumber}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">
-                      {customer?.vehicleNumber}
-                    </span>
-                  </td>
+                 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">
                       {customer?.status}
@@ -346,13 +334,7 @@ const DeliveryStaff = () => {
                       >
                         View
                       </Link>
-                      <Link
-                        to={`/viewreataurant`}
-                        className="text-yellow-600 hover:text-yellow-900 inline-flex items-center"
-                      >
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Edit
-                      </Link>
+                    
 
                       <button
                         onClick={() => handleDelete(restaurant._id)}

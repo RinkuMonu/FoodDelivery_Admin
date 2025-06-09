@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -26,7 +25,8 @@ import EditRestaurant from "./pages/EditRestaurant";
 import ViewFoodItem from "./pages/ViewFoodItem";
 import AddFoodItem from "./pages/AddFoodItem";
 import EditFoodItem from "./pages/EditFoodItem";
-
+import AddRestauran from "./pages/AddRestauran";
+import AssignOrder from "./pages/AssignOrders";
 
 function App() {
   return (
@@ -60,7 +60,7 @@ function App() {
           <Route path="inventory" element={<Inventory />} />
           <Route path="settings" element={<Settings />} />
           <Route path="restaurant" element={<Restaurant />} />
-          <Route path="addrestaurant" element={<AddRestaurant />} />
+          <Route path="addrestaurant" element={<AddRestauran />} />
           <Route path="viewreataurant/:id" element={<ViewRestaurant />} />
           <Route path="fooditem" element={<FoodItem />} />
           <Route path="delivery" element={<DeliveryStaff />} />
@@ -69,10 +69,10 @@ function App() {
           <Route path="reports" element={<Reports />} />
           <Route path="edit" element={<EditRestaurant />} />
           <Route path="viewfooditem/:id" element={<ViewFoodItem />} />
-          <Route path="addfooditem" element={<AddFoodItem/>}/>
-           <Route path="editfooditem" element={<EditFoodItem/>}/> 
-          <Route path="editfooditem/:id" element={<EditFoodItem/>}/> 
-
+          <Route path="addfooditem" element={<AddFoodItem />} />
+          <Route path="editfooditem" element={<EditFoodItem />} />
+          <Route path="editfooditem/:id" element={<EditFoodItem />} />
+          <Route path="assignorder/:id" element={<AssignOrder />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

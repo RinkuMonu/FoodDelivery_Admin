@@ -465,7 +465,7 @@ export default function AddRestaurant() {
                 name="salonOwnerName"
                 value={formData.salonOwnerName}
                 required
-                readOnly
+                
               />
             </div>
 

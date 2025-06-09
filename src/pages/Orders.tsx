@@ -90,32 +90,42 @@ const Orders = () => {
     fetchOrders();
   }, [user?.role, token]);
 
-  const assignOrderToDeliveryPartner = async (orderId: string, deliveryPartnerId: string) => {
-    const response = await axiosInstance.patch(`/api/orders/${orderId}/assign-delivery`, {
-      deliveryPartnerId,
-    });
+  const assignOrderToDeliveryPartner = async (
+    orderId: string,
+    deliveryPartnerId: string
+  ) => {
+    const response = await axiosInstance.patch(
+      `/api/orders/${orderId}/assign-delivery`,
+      {
+        deliveryPartnerId,
+      }
+    );
     return response.data;
   };
 
   const handleAssignOrder = async (orderId: string) => {
     try {
       const deliveryPartnerId = "682c33b376fb77d16a18bd92"; // Replace with dynamic later
-      const result = await assignOrderToDeliveryPartner(orderId, deliveryPartnerId);
+      const result = await assignOrderToDeliveryPartner(
+        orderId,
+        deliveryPartnerId
+      );
       alert(`Order ${orderId} assigned.`);
 
       // Refetch orders or update local state
-      setOrders((prevOrders) =>
-        prevOrders
-          .map((order) =>
-            order._id === orderId
-              ? {
-                  ...order,
-                  deliveryPartner: deliveryPartnerId,
-                  orderStatus: result.data.orderStatus,
-                }
-              : order
-          )
-          .filter((order) => order.orderStatus !== "Delivered") // Remove delivered orders
+      setOrders(
+        (prevOrders) =>
+          prevOrders
+            .map((order) =>
+              order._id === orderId
+                ? {
+                    ...order,
+                    deliveryPartner: deliveryPartnerId,
+                    orderStatus: result.data.orderStatus,
+                  }
+                : order
+            )
+            .filter((order) => order.orderStatus !== "Delivered") // Remove delivered orders
       );
     } catch (err) {
       console.error(err);
@@ -245,7 +255,9 @@ const Orders = () => {
             </div>
             {startDate && endDate && (
               <p className="text-sm text-gray-600 mt-2">
-                Showing <strong>{filteredOrders.length}</strong> orders from {dayjs(startDate).format("DD MMM")} to {dayjs(endDate).format("DD MMM")}
+                Showing <strong>{filteredOrders.length}</strong> orders from{" "}
+                {dayjs(startDate).format("DD MMM")} to{" "}
+                {dayjs(endDate).format("DD MMM")}
               </p>
             )}
           </div>
@@ -258,7 +270,9 @@ const Orders = () => {
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
                 {statuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
                 ))}
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -266,10 +280,16 @@ const Orders = () => {
               </div>
             </div>
 
-            <button onClick={exportCSV} className="btn btn-secondary h-10 flex items-center">
+            <button
+              onClick={exportCSV}
+              className="btn btn-secondary h-10 flex items-center"
+            >
               <Download className="h-4 w-4 mr-2" /> CSV
             </button>
-            <button onClick={exportPDF} className="btn btn-secondary h-10 flex items-center">
+            <button
+              onClick={exportPDF}
+              className="btn btn-secondary h-10 flex items-center"
+            >
               <Download className="h-4 w-4 mr-2" /> PDF
             </button>
           </div>
@@ -279,35 +299,76 @@ const Orders = () => {
           <table className="min-w-full divide-y divide-gray-100">
             <thead className="bg-gray-50">
               <tr>
-                {["Order ID", "Customer", "Email", "Restaurant", "Items", "Date", "Amount", "Payment", "Status"].map((label) => (
-                  <th key={label} onClick={() => requestSort(label)} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-                    <div className="flex items-center">{label} {getSortIcon(label)}</div>
+                {[
+                  "Order ID",
+                  "Customer",
+                  "Email",
+                  "Restaurant",
+                  "Items",
+                  "Date",
+                  "Amount",
+                  "Payment",
+                  "Status",
+                ].map((label) => (
+                  <th
+                    key={label}
+                    onClick={() => requestSort(label)}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  >
+                    <div className="flex items-center">
+                      {label} {getSortIcon(label)}
+                    </div>
                   </th>
                 ))}
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-50">
               {sortedOrders.map((order) => (
                 <tr key={order._id} className="hover:bg-gray-30">
-                  <td className="px-6 py-4 whitespace-nowrap">{order.orderNumber}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.customer}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.user?.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.restaurant?.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.items?.quantity}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{new Date(order.createdAt).toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.finalAmount}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.paymentStatus}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{order.orderStatus}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.orderNumber}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.customer}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.user?.email}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.restaurant?.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.items?.quantity}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {new Date(order.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.finalAmount}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.paymentStatus}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.orderStatus}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right space-x-3">
-                    <Link to={`/orders/${order._id}`} className="text-primary-600 hover:text-primary-900 inline-flex items-center">
+                    <Link
+                      to={`/orders/${order._id}`}
+                      className="text-primary-600 hover:text-primary-900 inline-flex items-center"
+                    >
                       <Eye className="h-4 w-4 mr-1" /> View
                     </Link>
-                    {!order.deliveryPartner && (
-                      <button onClick={() => handleAssignOrder(order._id)} className="text-green-600 hover:text-green-800 inline-flex items-center">
-                        <Truck className="h-4 w-4 mr-1" /> Assign
-                      </button>
-                    )}
+                   
+                         <Link
+                      to={`/assignorder/${order._id}`}
+                      className="text-green-600 hover:text-primary-900 inline-flex items-center"
+                    >
+                      <Truck className="h-4 w-4 mr-1" /> Assign Rider
+                    </Link>
                   </td>
                 </tr>
               ))}

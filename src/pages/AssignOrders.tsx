@@ -1,48 +1,59 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   Search,
   Filter,
   ChevronDown,
-  Eye,
-  Download,
-  Calendar,
+  Mail,
+  User,
   ArrowUpDown,
   Pencil,
   Trash,
+  Truck,
 } from "lucide-react";
 import axiosInstance from "../components/AxiosInstance";
+import { toast } from "react-toastify";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-// Mock order data
 
-const Restaurant = () => {
+// Mock customer data
+const AssignOrder = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All");
-  const [dateRange, setDateRange] = useState("All");
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: "ascending" | "descending" | null;
   }>({ key: "", direction: null });
-  const [restaurants, setRestaurants] = useState([]);
-  const [Loading, setLoading] = useState();
-  const [error, setError] = useState();
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [id, setid] = useState(""); // State to store order ID
+//   const {id} = useParams()
 
-  // Filter orders based on search, status, and date range
-  const filteredOrders = restaurants.filter((order) => {
+  // Extract order ID from URL
+  useEffect(() => {
+    const pathParts = window.location.pathname.split('/');
+    const id = pathParts[pathParts.length - 1];
+    if (id) {
+      setid(id);
+    }
+  }, []);
+
+  const filteredCustomers = users.filter((user) => {
     const matchesSearch =
-      order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.name.toLowerCase().includes(searchTerm.toLowerCase());
+      user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const statusText = user?.isActive === true ? "Active" : "Inactive";
     const matchesStatus =
-      selectedStatus === "All" || order.status === selectedStatus;
+      selectedStatus === "All" || statusText === selectedStatus;
 
-    // Date filtering would be more complex in a real app
-    const matchesDate = true; // Simplified for mock data
-
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesStatus;
   });
 
-  // Sort orders
-  const sortedOrders = [...filteredOrders].sort((a, b) => {
+  // Sort customers
+  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
     if (!sortConfig.key) return 0;
 
     const aValue = a[sortConfig.key as keyof typeof a];
@@ -82,79 +93,58 @@ const Restaurant = () => {
     return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
   };
 
-  const statuses = [
-    "All",
-    "Pending",
-    "Processing",
-    "Shipped",
-    "Delivered",
-    "Cancelled",
-  ];
-  const dateRanges = [
-    "All",
-    "Today",
-    "Yesterday",
-    "Last 7 days",
-    "Last 30 days",
-    "This month",
-    "Last month",
-  ];
-
-const fetchRestaurants = async () => {
-  try {
-    const response = await axiosInstance.get("/api/restaurants");
-    console.log("responseeeeeeeeeedtrrtt", response);
-    setRestaurants(response?.data?.data);
-  } catch (err) {
-    console.error(err);
-    setError("Failed to fetch restaurants.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  fetchRestaurants();
-}, []);
-
-const handleDelete = async (
-  restaurantId: string
-): Promise<{ success: boolean; message?: string }> => {
-  try {
-    const response = await axiosInstance.delete(
-      `/api/restaurants/${restaurantId}`
-    );
-    if (response.data?.success) {
-      // Re-fetch the updated list of restaurants
-      fetchRestaurants();
-      return { success: true };
-    } else {
-      return {
-        success: false,
-        message: response.data?.message || "Delete failed",
-      };
+  const statuses = ["All", "Active", "Inactive"];
+  const fetchRestaurants = async () => {
+    try {
+      const response = await axiosInstance.get("api/riders");
+      setUsers(response?.data?.data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch restaurants.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    return {
-      success: false,
-      message:
-        error.response?.data?.message || error.message || "Server error",
-    };
-  }
-};
+  };
 
+  // Handle order assignment
+  const handleAssign = async (deliveryPartnerId: string) => {
+    if (!id) {
+      toast.error("Order ID is missing");
+      return;
+    }
+    
+    try {
+      await axiosInstance.put(
+        `api/orders/${id}/assign-delivery`,
+         {deliveryPartnerId} 
+      );
+       fetchRestaurants()
+      toast.success("Order assigned successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to assign order");
+    }
+  };
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Restaurants</h2>
+        <h2 className="text-2xl font-bold text-gray-900">DeliveryStaff</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your customer orders and track their status
+          Manage your DeliveryStaff accounts and view their Delivery history
         </p>
+        {id && (
+          <p className="mt-1 text-sm text-blue-600">
+            Assigning order: {id}
+          </p>
+        )}
       </div>
-      <div>
-        <Link to="/edit">Add Restaurant</Link>
-      </div>
+        <ToastContainer />
+
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
         {/* Filters and Search */}
         <div className="p-4 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
@@ -165,7 +155,7 @@ const handleDelete = async (
               </div>
               <input
                 type="text"
-                placeholder="Search orders by ID, customer or email..."
+                placeholder="Search Riders by name, email or location..."
                 className="pl-10 input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -173,7 +163,7 @@ const handleDelete = async (
             </div>
           </div>
           <div className="mt-4 sm:mt-0 flex flex-wrap gap-3">
-            {/* <div className="relative">
+            <div className="relative">
               <select
                 className="input h-10 pl-3 pr-10 py-2 appearance-none"
                 value={selectedStatus}
@@ -188,65 +178,53 @@ const handleDelete = async (
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                 <ChevronDown className="h-4 w-4 text-gray-500" />
               </div>
-            </div> */}
-            {/* <div className="relative">
-              <select
-                className="input h-10 pl-3 pr-10 py-2 appearance-none"
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-              >
-                {dateRanges.map((range) => (
-                  <option key={range} value={range}>
-                    {range}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              </div>
-            </div> */}
-            {/* <button className="btn btn-secondary h-10 flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
-              Custom Date
-            </button> */}
+            </div>
             <button className="btn btn-secondary h-10 flex items-center">
-              <Download className="h-4 w-4 mr-2" />
-              Export
+              <Filter className="h-4 w-4 mr-2" />
+              More Filters
             </button>
           </div>
         </div>
 
-        {/* Orders Table */}
+        {/* Customers Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("id")}
+                  onClick={() => requestSort("name")}
                 >
                   <div className="flex items-center">
-                    S.N
-                    {getSortIcon("id")}
-                  </div>
-                </th>
-
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("restaurant")}
-                >
-                  <div className="flex items-center">
-                    Restaurant Name
-                    {getSortIcon("restaurant")}
+                    Customer
+                    {getSortIcon("name")}
                   </div>
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("address")}
+                  onClick={() => requestSort("location")}
                 >
                   <div className="flex items-center">
-                    Address
-                    {getSortIcon("address")}
+                    Mobile No.
+                    {getSortIcon("mobile")}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => requestSort("email")}
+                >
+                  <div className="flex items-center">
+                    Assigned Orders
+                    {getSortIcon("Assigned")}
+                  </div>
+                </th>{" "}
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => requestSort("deliveries")}
+                >
+                  <div className="flex items-center">
+                    Total Deliveries.
+                    {getSortIcon("deliveries")}
                   </div>
                 </th>
                 <th
@@ -260,29 +238,22 @@ const handleDelete = async (
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("delivery")}
+                  onClick={() => requestSort("Vehicle")}
                 >
                   <div className="flex items-center">
-                    Average Delivery Time
-                    {getSortIcon("delivery")}
+                    Vehicle No.
+                    {getSortIcon("Vehicle")}
                   </div>
                 </th>
+              
+               
                 <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("type")}
+                  onClick={() => requestSort("earnings")}
                 >
                   <div className="flex items-center">
-                    Type
-                    {getSortIcon("type")}
-                  </div>
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort("tags")}
-                >
-                  <div className="flex items-center">
-                    Tags
-                    {getSortIcon("tags")}
+                    Status
+                    {getSortIcon("status")}
                   </div>
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -291,70 +262,69 @@ const handleDelete = async (
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedOrders.map((restaurant, index) => (
-                <tr key={restaurant._id} className="hover:bg-gray-50">
+              {sortedCustomers.map((customer) => (
+                <tr key={customer?._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-gray-900">
-                      {index + 1}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {restaurant?.name}
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 flex-shrink-0">
+                        <img
+                          className="h-10 w-10 rounded-full"
+                          src={customer?.profilePicture}
+                          alt={customer?.fullName}
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {customer?.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {customer?.email}
+                        </div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {restaurant?.address?.city}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {restaurant.rating}
-                    </div>
-                  </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-gray-900">
-                      {restaurant?.avgDeliveryTime}
+                      {customer?.mobile}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="ml-1 text-xs text-gray-500">
-                      ({restaurant?.type} )
+                    <span className="text-sm text-gray-900">
+                      {customer?.assignedOrders}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="ml-1 text-xs text-gray-500">
-                      ({restaurant?.tags} )
+                    <span className="text-sm text-gray-900">
+                      ${customer?.spent?.toFixed(2)}
                     </span>
                   </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <Link
-                      to={`/viewreataurant/${restaurant._id}`}
-                      className="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Link>
-
-                    <Link
-                      to={`/edit`}
-                      state={{ restaurantData: restaurant }} 
-                      className="text-yellow-600 hover:text-yellow-900 inline-flex items-center"
-                    >
-                      <Pencil className="h-4 w-4 mr-1" />
-                      Edit
-                    </Link>
-
-                    <button
-                      onClick={() => handleDelete(restaurant._id)}
-                      className="text-red-600 hover:text-red-900 inline-flex items-center"
-                    >
-                      <Trash className="h-4 w-4 mr-1" />
-                      Delete
-                    </button>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900">
+                      {customer?.lastOrder}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900">
+                      {customer?.vehicleNumber}
+                    </span>
+                  </td>
+                  
+                 
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm text-gray-900">
+                      {customer?.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => handleAssign(customer._id)}
+                        className="text-green-600 hover:text-red-900 inline-flex items-center"
+                      >
+                        <Truck className="h-4 w-4 mr-1" />
+                        Assign Order
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -362,10 +332,10 @@ const handleDelete = async (
           </table>
 
           {/* Empty state */}
-          {sortedOrders.length === 0 && (
+          {sortedCustomers.length === 0 && (
             <div className="px-6 py-10 text-center">
               <p className="text-gray-500">
-                No orders found matching your criteria.
+                No customers found matching your criteria.
               </p>
             </div>
           )}
@@ -413,4 +383,4 @@ const handleDelete = async (
   );
 };
 
-export default Restaurant;
+export default AssignOrder;

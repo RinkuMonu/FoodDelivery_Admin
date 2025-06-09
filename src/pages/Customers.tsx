@@ -1,10 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ChevronDown, Mail, User, ArrowUpDown } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  ChevronDown,
+  Mail,
+  ArrowUpDown
+} from 'lucide-react';
 import axiosInstance from '../components/AxiosInstance';
 
-// Mock customer data
-;
+interface Customer {
+  _id: string;
+  fullName: string;
+  email: string;
+  mobileNumber: string;
+  profilePicture?: string;
+  orders?: number;
+  spent?: number;
+  lastOrder?: string;
+  isActive: boolean;
+  [key: string]: unknown;
+}
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -13,38 +29,59 @@ const Customers = () => {
     key: string;
     direction: 'ascending' | 'descending' | null;
   }>({ key: '', direction: null });
-  const [users, setUsers] = useState([])
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(true)
+  const [users, setUsers] = useState<Customer[]>([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
+  const statuses = ['All', 'Active', 'Inactive'];
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axiosInstance.get<{ data: Customer[] }>('/api/users');
+        setUsers(response.data.data);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Failed to fetch customers.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchUsers();
+  }, []);
 
- const filteredCustomers = users.filter(user => {
-  const matchesSearch = 
-    user?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredCustomers = users.filter((user) => {
+    const matchesSearch =
+      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-  const statusText = user?.isActive === true ? 'Active' : 'Inactive';
-  const matchesStatus = selectedStatus === 'All' || statusText === selectedStatus;
+    const statusText = user.isActive ? 'Active' : 'Inactive';
+    const matchesStatus = selectedStatus === 'All' || statusText === selectedStatus;
 
-  return matchesSearch && matchesStatus;
-});
+    return matchesSearch && matchesStatus;
+  });
 
-
-  // Sort customers
   const sortedCustomers = [...filteredCustomers].sort((a, b) => {
-    if (!sortConfig.key) return 0;
-    
-    const aValue = a[sortConfig.key as keyof typeof a];
-    const bValue = b[sortConfig.key as keyof typeof b];
-    
-    if (aValue < bValue) {
-      return sortConfig.direction === 'ascending' ? -1 : 1;
+    const key = sortConfig.key as keyof Customer;
+    if (!key || !sortConfig.direction) return 0;
+
+    const aValue = a[key];
+    const bValue = b[key];
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortConfig.direction === 'ascending' ? aValue - bValue : bValue - aValue;
     }
-    if (aValue > bValue) {
-      return sortConfig.direction === 'ascending' ? 1 : -1;
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortConfig.direction === 'ascending'
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
     }
+
     return 0;
   });
 
@@ -73,25 +110,6 @@ const Customers = () => {
     return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
   };
 
-  const statuses = ['All', 'Active', 'Inactive'];
-
-    useEffect(() => {
-    const fetchRestaurants = async () => {
-      try {
-        const response = await axiosInstance.get("/api/users");
-        console.log("responseeeee......", response);
-        setUsers(response?.data?.data);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch restaurants.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRestaurants();
-  }, [ ]);
-
   return (
     <div className="space-y-6">
       <div>
@@ -102,7 +120,7 @@ const Customers = () => {
       </div>
 
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        {/* Filters and Search */}
+        {/* Filters */}
         <div className="p-4 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
           <div className="w-full max-w-lg">
             <div className="relative">
@@ -125,8 +143,10 @@ const Customers = () => {
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
-                {statuses.map(status => (
-                  <option key={status} value={status}>{status}</option>
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
                 ))}
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -140,30 +160,30 @@ const Customers = () => {
           </div>
         </div>
 
-        {/* Customers Table */}
+        {/* Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('name')}
+                  onClick={() => requestSort('fullName')}
                 >
                   <div className="flex items-center">
                     Customer
-                    {getSortIcon('name')}
+                    {getSortIcon('fullName')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('location')}
+                  onClick={() => requestSort('mobileNumber')}
                 >
                   <div className="flex items-center">
                     Mobile No.
-                    {getSortIcon('mobile')}
+                    {getSortIcon('mobileNumber')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => requestSort('orders')}
                 >
@@ -172,7 +192,7 @@ const Customers = () => {
                     {getSortIcon('orders')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => requestSort('spent')}
                 >
@@ -181,7 +201,7 @@ const Customers = () => {
                     {getSortIcon('spent')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => requestSort('lastOrder')}
                 >
@@ -190,13 +210,13 @@ const Customers = () => {
                     {getSortIcon('lastOrder')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => requestSort('status')}
+                  onClick={() => requestSort('isActive')}
                 >
                   <div className="flex items-center">
                     Status
-                    {getSortIcon('status')}
+                    {getSortIcon('isActive')}
                   </div>
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -206,50 +226,59 @@ const Customers = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {sortedCustomers.map((customer) => (
-                <tr key={customer?._id} className="hover:bg-gray-50">
+                <tr key={customer._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0">
-                        <img 
-                          className="h-10 w-10 rounded-full" 
-                          src={customer?.profilePicture} 
-                          alt={customer?.fullName} 
+                        <img
+                          className="h-10 w-10 rounded-full"
+                          src={customer.profilePicture || '/avatar.png'}
+                          alt={customer.fullName}
                         />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{customer?.fullName}</div>
-                        <div className="text-sm text-gray-500">{customer?.email}</div>
+                        <div className="text-sm font-medium text-gray-900">{customer.fullName}</div>
+                        <div className="text-sm text-gray-500">{customer.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">{customer?.mobileNumber}</span>
+                    <span className="text-sm text-gray-900">{customer.mobileNumber}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">{customer?.orders}</span>
+                    <span className="text-sm text-gray-900">{customer.orders ?? 0}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">${customer?.spent?.toFixed(2)}</span>
+                    <span className="text-sm text-gray-900">
+                      ₹{customer.spent?.toFixed(2) ?? '0.00'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">{customer?.lastOrder}</span>
+                    <span className="text-sm text-gray-900">{customer.lastOrder ?? 'N/A'}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${customer.isActive === true
-                        ? 'bg-success-100 text-success-800' 
-                        : 'bg-gray-100 text-gray-800'
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        customer.isActive
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {customer.isActive === true ? "Active" : "InActive" }
+                      {customer.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
-                      <Link to={`/customers/${customer._id}`} className="text-primary-600 hover:text-primary-900">
+                      <Link
+                        to={`/customers/${customer._id}`}
+                        className="text-primary-600 hover:text-primary-900"
+                      >
                         View
                       </Link>
-                      <a href={`mailto:${customer.email}`} className="text-gray-600 hover:text-gray-900">
+                      <a
+                        href={`mailto:${customer.email}`}
+                        className="text-gray-600 hover:text-gray-900"
+                      >
                         <Mail className="h-4 w-4" />
                       </a>
                     </div>
@@ -258,8 +287,7 @@ const Customers = () => {
               ))}
             </tbody>
           </table>
-          
-          {/* Empty state */}
+
           {sortedCustomers.length === 0 && (
             <div className="px-6 py-10 text-center">
               <p className="text-gray-500">No customers found matching your criteria.</p>
@@ -267,38 +295,9 @@ const Customers = () => {
           )}
         </div>
 
-        {/* Pagination */}
-        <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-          <div className="flex-1 flex justify-between sm:hidden">
-            <button className="btn btn-secondary">Previous</button>
-            <button className="ml-3 btn btn-secondary">Next</button>
-          </div>
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">1</span> to <span className="font-medium">8</span> of{' '}
-                <span className="font-medium">8</span> results
-              </p>
-            </div>
-            <div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  <span className="sr-only">Previous</span>
-                  <ChevronDown className="h-5 w-5 rotate-90" />
-                </button>
-                <button className="bg-primary-50 border-primary-500 text-primary-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
-                  1
-                </button>
-                <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                  2
-                </button>
-                <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  <span className="sr-only">Next</span>
-                  <ChevronDown className="h-5 w-5 -rotate-90" />
-                </button>
-              </nav>
-            </div>
-          </div>
+        {/* Pagination Placeholder */}
+        <div className="px-4 py-3 border-t border-gray-200 text-sm text-gray-600 text-center">
+          Pagination Placeholder
         </div>
       </div>
     </div>

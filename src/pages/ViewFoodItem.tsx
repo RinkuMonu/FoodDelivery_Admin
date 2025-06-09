@@ -44,14 +44,14 @@ const ViewFoodItem = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700 mb-4">
         <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-          <p><strong>Serve Size:</strong> {menu.serveSize}</p>
-          <p><strong>Preparation Time:</strong> {menu.preparationTime} mins</p>
-          <p><strong>Available:</strong> {menu.isAvailable ? "Yes" : "No"}</p>
+          <p><strong>Serve Size:</strong> {menu?.serveSize}</p>
+          <p><strong>Preparation Time:</strong> {menu?.preparationTime} mins</p>
+          <p><strong>Available:</strong> {menu?.isAvailable ? "Yes" : "No"}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-          <p><strong>Restaurant:</strong> {menu.restaurant.name}</p>
-          <p><strong>City:</strong> {menu.restaurant.address.city}</p>
-          <p><strong>Phone:</strong> {menu.restaurant.contact.phone}</p>
+          <p><strong>Restaurant:</strong> {menu?.restaurant?.name}</p>
+          <p><strong>City:</strong> {menu?.restaurant?.address?.city}</p>
+          <p><strong>Phone:</strong> {menu?.restaurant?.contact?.phone}</p>
         </div>
       </div>
 

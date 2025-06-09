@@ -147,7 +147,7 @@ const Header = ({ setSidebarOpen }: HeaderProps) => {
                   )}
                   <span className="hidden md:flex md:items-center ml-2">
                     <span className="text-sm font-medium text-gray-700 mr-1">
-                      {user?.name || 'User'}
+                      {user?.name || 'Profile'}
                     </span>
                     <ChevronDown className="h-4 w-4 text-gray-400" />
                   </span>
@@ -157,10 +157,10 @@ const Header = ({ setSidebarOpen }: HeaderProps) => {
 
             {dropdownOpen && (
               <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in">
-                <div className="px-4 py-2 text-xs text-gray-500">Signed in as</div>
+                {/* <div className="px-4 py-2 text-xs text-gray-500">Signed in as</div>
                 <div className="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
                   {user?.email || 'user@example.com'}
-                </div>
+                </div> */}
                 <a
                   href="#"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"

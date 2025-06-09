@@ -10,10 +10,30 @@ import {
 } from "lucide-react";
 import axiosInstance from "../components/AxiosInstance";
 
-const Restaurant = () => {
+interface MenuItem {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  discountedPrice: number;
+  ingredients: string;
+  spicyLevel: string;
+  [key: string]: any;
+}
+
+interface MenuResponse {
+  data: MenuItem[];
+  page: number;
+  pages: number;
+}
+
+const FoodItem = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "ascending" | "descending" | null }>({ key: "", direction: null });
-  const [restaurants, setRestaurants] = useState([]);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "ascending" | "descending" | null;
+  }>({ key: "", direction: null });
+  const [restaurants, setRestaurants] = useState<MenuItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -22,14 +42,17 @@ const Restaurant = () => {
   const fetchRestaurants = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/api/menus?page=${page}`);
+      const response = await axiosInstance.get<MenuResponse>(`/api/menus?page=${page}`);
       const res = response.data;
       setRestaurants(res.data);
       setCurrentPage(res.page);
       setTotalPages(res.pages);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch restaurants.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to fetch restaurants.");
+      }
     } finally {
       setLoading(false);
     }
@@ -39,7 +62,9 @@ const Restaurant = () => {
     fetchRestaurants(currentPage);
   }, [currentPage]);
 
-  const handleDelete = async (restaurantId: string): Promise<{ success: boolean; message?: string }> => {
+  const handleDelete = async (
+    restaurantId: string
+  ): Promise<{ success: boolean; message?: string }> => {
     try {
       const response = await axiosInstance.delete(`/api/menus/${restaurantId}`);
       if (response.data?.success) {
@@ -51,10 +76,16 @@ const Restaurant = () => {
           message: response.data?.message || "Delete failed",
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: error.message,
+        };
+      }
       return {
         success: false,
-        message: error.response?.data?.message || error.message || "Server error",
+        message: "Unknown error",
       };
     }
   };
@@ -70,7 +101,8 @@ const Restaurant = () => {
   };
 
   const getSortIcon = (key: string) => {
-    if (sortConfig.key !== key) return <ChevronDown className="h-4 w-4 text-gray-400" />;
+    if (sortConfig.key !== key)
+      return <ChevronDown className="h-4 w-4 text-gray-400" />;
     return (
       <ChevronDown
         className={`h-4 w-4 text-primary-500 ${
@@ -81,11 +113,11 @@ const Restaurant = () => {
   };
 
   const sortedRestaurants = [...restaurants].sort((a, b) => {
-    if (!sortConfig.key) return 0;
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
-    if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
-    if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
+    if (!sortConfig.key || !sortConfig.direction) return 0;
+    const aVal = a[sortConfig.key];
+    const bVal = b[sortConfig.key];
+    if (aVal < bVal) return sortConfig.direction === "ascending" ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === "ascending" ? 1 : -1;
     return 0;
   });
 
@@ -103,10 +135,13 @@ const Restaurant = () => {
       </div>
 
       <div>
-        <Link to="/editfooditem">Add Menu</Link>
+        <Link to="/editfooditem" className="btn btn-primary">
+          Add Menu
+        </Link>
       </div>
 
       <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        {/* Search + Export */}
         <div className="p-4 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
           <div className="w-full max-w-lg">
             <div className="relative">
@@ -122,7 +157,6 @@ const Restaurant = () => {
               />
             </div>
           </div>
-
           <div className="mt-4 sm:mt-0 flex flex-wrap gap-3">
             <button className="btn btn-secondary h-10 flex items-center">
               <Download className="h-4 w-4 mr-2" />
@@ -136,7 +170,14 @@ const Restaurant = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {["name", "description", "price", "discountedPrice", "ingredients", "spicyLevel"].map((key) => (
+                {[
+                  "name",
+                  "description",
+                  "price",
+                  "discountedPrice",
+                  "ingredients",
+                  "spicyLevel",
+                ].map((key) => (
                   <th
                     key={key}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -148,10 +189,11 @@ const Restaurant = () => {
                     </div>
                   </th>
                 ))}
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
-
             <tbody className="bg-white divide-y divide-gray-200">
               {sortedRestaurants
                 .filter((item) =>
@@ -162,16 +204,23 @@ const Restaurant = () => {
                   <tr key={restaurant._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">{restaurant.name}</td>
                     <td className="px-6 py-4">{restaurant.description}</td>
-                    <td className="px-6 py-4">{restaurant.price}</td>
-                    <td className="px-6 py-4">{restaurant.discountedPrice}</td>
+                    <td className="px-6 py-4">₹{restaurant.price}</td>
+                    <td className="px-6 py-4">₹{restaurant.discountedPrice}</td>
                     <td className="px-6 py-4">{restaurant.ingredients}</td>
                     <td className="px-6 py-4">{restaurant.spicyLevel}</td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <Link to={`/viewfooditem/${restaurant._id}`} className="text-blue-600 hover:text-blue-900 inline-flex items-center">
+                      <Link
+                        to={`/viewfooditem/${restaurant._id}`}
+                        className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                      >
                         <Eye className="h-4 w-4 mr-1" />
                         View
                       </Link>
-                      <Link to={`/editfooditem/${restaurant._id}`} className="text-yellow-600 hover:text-yellow-900 inline-flex items-center">
+                      <Link
+                        to={`/editfooditem`}
+                        state={{ initialData: restaurant }}
+                        className="text-yellow-600 hover:text-yellow-900 inline-flex items-center"
+                      >
                         <Pencil className="h-4 w-4 mr-1" />
                         Edit
                       </Link>
@@ -188,8 +237,7 @@ const Restaurant = () => {
             </tbody>
           </table>
 
-          {/* Empty state */}
-          {restaurants.length === 0 && !loading && (
+          {!loading && restaurants.length === 0 && (
             <div className="px-6 py-10 text-center text-gray-500">No menus found.</div>
           )}
         </div>
@@ -208,22 +256,17 @@ const Restaurant = () => {
               >
                 Prev
               </button>
-              {[...Array(totalPages)].map((_, i) => {
-                const page = i + 1;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-3 py-1 border-t border-b ${
-                      page === currentPage
-                        ? "bg-primary-100 font-bold"
-                        : "bg-white"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-1 border ${
+                    page === currentPage ? "bg-primary-100 font-bold" : "bg-white"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -239,4 +282,4 @@ const Restaurant = () => {
   );
 };
 
-export default Restaurant;
+export default FoodItem;
