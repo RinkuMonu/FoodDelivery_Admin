@@ -27,6 +27,9 @@ import AddFoodItem from "./pages/AddFoodItem";
 import EditFoodItem from "./pages/EditFoodItem";
 import AddRestauran from "./pages/AddRestauran";
 import AssignOrder from "./pages/AssignOrders";
+import Category from "./pages/Category";
+
+
 
 function App() {
   return (
@@ -73,6 +76,8 @@ function App() {
           <Route path="editfooditem" element={<EditFoodItem />} />
           <Route path="editfooditem/:id" element={<EditFoodItem />} />
           <Route path="assignorder/:id" element={<AssignOrder />} />
+          <Route path="category" element={<Category/>}/> 
+
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

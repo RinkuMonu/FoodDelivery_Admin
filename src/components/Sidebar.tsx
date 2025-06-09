@@ -98,6 +98,12 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
       icon: <Users size={20} />,
       roles: ["admin","restaurant"],
     },
+    {
+      name: "Category",
+      to: "/category",
+      icon: <Users size={20} />,
+      roles: ["admin","restaurant"],
+    },
   ];
 
   const filteredNavigation = navigation.filter(
